@@ -13,6 +13,7 @@ import iconTenis from '../../assets/iconSports/tennis.png'
 import { getCompetitionRailBadge } from '../../data/competitionBadges'
 import type { ProductRailBaseItem, ProductRailSection } from '../../types/home'
 import type { CompetitionLinkTarget } from '../../utils/competitionNavigation'
+import type { HeaderVisualVariant } from '../Header'
 import { MoreSportsBottomSheet } from '../BottomSheet'
 
 interface SportRailBaseItem extends ProductRailBaseItem {
@@ -39,6 +40,7 @@ interface SportRailMoreItem extends SportRailBaseItem {
 type SportRailItem = SportRailSportItem | SportRailCompetitionItem | SportRailMoreItem
 
 interface SportRailProps {
+  visualVariant?: HeaderVisualVariant
   activeSport?: string | null
   selectedCompetitionId?: string | null
   selectedCompetitionName?: string | null
@@ -50,6 +52,7 @@ interface SportRailProps {
 interface ProductRailProps<TItem extends ProductRailBaseItem> {
   sections: ProductRailSection<TItem>[]
   activeItemId: string
+  visualVariant?: HeaderVisualVariant
   isSportPage?: boolean
   renderAfter?: ReactNode
   getScrollAnchorId?: (item: TItem | undefined) => string | null
@@ -267,12 +270,11 @@ const hasSportRailLiveIndicator = (item: SportRailItem) => {
 const setProductRailActiveIndicator = (
   listEl: HTMLDivElement | null,
   activeItem: HTMLElement | null | undefined
-) => {
+): boolean => {
   const activeIcon = activeItem?.querySelector<HTMLElement>('.sport-rail__icon')
 
   if (!listEl || !activeIcon) {
-    listEl?.classList.remove('sport-rail__list--indicator-ready')
-    return
+    return false
   }
 
   const listRect = listEl.getBoundingClientRect()
@@ -282,7 +284,7 @@ const setProductRailActiveIndicator = (
   listEl.style.setProperty('--sport-rail-active-y', `${iconRect.top - listRect.top}px`)
   listEl.style.setProperty('--sport-rail-active-width', `${iconRect.width}px`)
   listEl.style.setProperty('--sport-rail-active-height', `${iconRect.height}px`)
-  listEl.classList.add('sport-rail__list--indicator-ready')
+  return true
 }
 
 const getDefaultProductRailScrollAnchorId = <TItem extends ProductRailBaseItem>(
@@ -336,6 +338,7 @@ const createDynamicCompetitionItem = (
 export function ProductRail<TItem extends ProductRailBaseItem>({
   sections,
   activeItemId,
+  visualVariant = 'default',
   isSportPage = false,
   renderAfter,
   getScrollAnchorId = getDefaultProductRailScrollAnchorId,
@@ -349,10 +352,16 @@ export function ProductRail<TItem extends ProductRailBaseItem>({
   const [hasMoreItemsRight, setHasMoreItemsRight] = useState(false)
   const [hasUserScrolledRail, setHasUserScrolledRail] = useState(false)
   const [isRailScrolledFromStart, setIsRailScrolledFromStart] = useState(false)
+  const [isActiveIndicatorReady, setIsActiveIndicatorReady] = useState(false)
+  const [isLiquidIndicatorSwitching, setIsLiquidIndicatorSwitching] = useState(false)
   const listRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<(HTMLElement | null)[]>([])
   const hasUserScrolledRailRef = useRef(false)
   const hasAlignedActiveScrollRef = useRef(false)
+  const previousActiveItemIdRef = useRef(activeItemId)
+  const liquidIndicatorResetTimerRef = useRef<number | null>(null)
+  const liquidIndicatorFrameRef = useRef<number | null>(null)
+  const isLiquidGlassNew = visualVariant === 'liquid-glass-new'
   const flatRailItems = useMemo(
     () => sections.flatMap((section) => section.items),
     [sections]
@@ -367,6 +376,48 @@ export function ProductRail<TItem extends ProductRailBaseItem>({
     setHasMoreItemsLeft(false)
   }, [])
 
+  const clearLiquidIndicatorTimers = useCallback(() => {
+    if (liquidIndicatorResetTimerRef.current !== null) {
+      window.clearTimeout(liquidIndicatorResetTimerRef.current)
+      liquidIndicatorResetTimerRef.current = null
+    }
+
+    if (liquidIndicatorFrameRef.current !== null) {
+      window.cancelAnimationFrame(liquidIndicatorFrameRef.current)
+      liquidIndicatorFrameRef.current = null
+    }
+  }, [])
+
+  const restartLiquidIndicatorMotion = useCallback(() => {
+    if (!isLiquidGlassNew) return
+
+    clearLiquidIndicatorTimers()
+    setIsLiquidIndicatorSwitching(false)
+
+    liquidIndicatorFrameRef.current = window.requestAnimationFrame(() => {
+      liquidIndicatorFrameRef.current = window.requestAnimationFrame(() => {
+        liquidIndicatorFrameRef.current = null
+        setIsLiquidIndicatorSwitching(true)
+
+        liquidIndicatorResetTimerRef.current = window.setTimeout(() => {
+          setIsLiquidIndicatorSwitching(false)
+          liquidIndicatorResetTimerRef.current = null
+        }, 560)
+      })
+    })
+  }, [clearLiquidIndicatorTimers, isLiquidGlassNew])
+
+  const updateActiveIndicator = useCallback(() => {
+    const isReady = setProductRailActiveIndicator(
+      listRef.current,
+      itemRefs.current[activeRailItemIndex]
+    )
+
+    setIsActiveIndicatorReady((current) => (
+      current === isReady ? current : isReady
+    ))
+  }, [activeRailItemIndex])
+
   useLayoutEffect(() => {
     const calculateGap = () => {
       const viewportWidth = listRef.current?.parentElement?.clientWidth || window.innerWidth
@@ -380,8 +431,19 @@ export function ProductRail<TItem extends ProductRailBaseItem>({
   }, [])
 
   useLayoutEffect(() => {
-    setProductRailActiveIndicator(listRef.current, itemRefs.current[activeRailItemIndex])
-  }, [activeRailItemIndex, gap])
+    updateActiveIndicator()
+  }, [gap, updateActiveIndicator])
+
+  useEffect(() => {
+    if (previousActiveItemIdRef.current !== activeItemId) {
+      previousActiveItemIdRef.current = activeItemId
+      restartLiquidIndicatorMotion()
+    }
+  }, [activeItemId, restartLiquidIndicatorMotion])
+
+  useEffect(() => () => {
+    clearLiquidIndicatorTimers()
+  }, [clearLiquidIndicatorTimers])
 
   useEffect(() => {
     const listEl = listRef.current
@@ -475,9 +537,6 @@ export function ProductRail<TItem extends ProductRailBaseItem>({
     if (!listEl) return
 
     const activeItem = itemRefs.current[activeRailItemIndex]
-    const updateActiveIndicator = () => {
-      setProductRailActiveIndicator(listEl, itemRefs.current[activeRailItemIndex])
-    }
     const resizeObserver = typeof ResizeObserver !== 'undefined'
       ? new ResizeObserver(updateActiveIndicator)
       : null
@@ -490,7 +549,7 @@ export function ProductRail<TItem extends ProductRailBaseItem>({
       resizeObserver?.disconnect()
       window.removeEventListener('resize', updateActiveIndicator)
     }
-  }, [activeRailItemIndex])
+  }, [activeRailItemIndex, updateActiveIndicator])
 
   const scrollRailItemToStart = useCallback((itemIndex: number, behavior: ScrollBehavior = 'smooth') => {
     const itemEl = itemRefs.current[itemIndex]
@@ -569,14 +628,13 @@ export function ProductRail<TItem extends ProductRailBaseItem>({
       .filter(Boolean)
       .join(' ')
 
-    if (isStatic) {
+    if (!isClickable) {
       return (
         <div
           key={item.id}
           ref={(el) => { itemRefs.current[itemIndex] = el }}
           className={className}
-          aria-disabled={!isClickable ? 'true' : undefined}
-          aria-current={isActive ? 'page' : undefined}
+          aria-disabled="true"
         >
           {renderIcon(item, isActive)}
           <span className="sport-rail__label">{item.label}</span>
@@ -592,6 +650,7 @@ export function ProductRail<TItem extends ProductRailBaseItem>({
         className={className}
         aria-pressed={item.isMore ? undefined : isActive}
         aria-haspopup={item.isMore ? 'dialog' : undefined}
+        aria-current={isActive ? 'page' : undefined}
         onClick={() => handleItemClick(item)}
       >
         {renderIcon(item, isActive)}
@@ -605,6 +664,7 @@ export function ProductRail<TItem extends ProductRailBaseItem>({
     'sport-rail',
     isSportPage ? 'sport-rail--sport-active' : '',
     'sport-rail--competitions',
+    isLiquidGlassNew ? 'sport-rail--liquid-glass-new' : '',
     hasMoreItemsLeft ? 'sport-rail--show-left-fade' : '',
     hasMoreItemsRight ? 'sport-rail--show-right-fade' : '',
   ]
@@ -625,7 +685,15 @@ export function ProductRail<TItem extends ProductRailBaseItem>({
       <div className={railShellClasses}>
         <div className={railClasses}>
           <div
-            className="sport-rail__list sport-rail__list--competitions"
+            className={[
+              'sport-rail__list',
+              'sport-rail__list--competitions',
+              isActiveIndicatorReady ? 'sport-rail__list--indicator-ready' : '',
+              isLiquidGlassNew ? 'sport-rail__list--liquid-glass-new' : '',
+              isLiquidIndicatorSwitching ? 'sport-rail__list--liquid-switching' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
             ref={listRef}
             style={railListStyle}
           >
@@ -650,6 +718,7 @@ export function ProductRail<TItem extends ProductRailBaseItem>({
 }
 
 export function SportRail({
+  visualVariant = 'default',
   activeSport,
   selectedCompetitionId,
   selectedCompetitionName,
@@ -751,6 +820,7 @@ export function SportRail({
     <ProductRail
       sections={railSections}
       activeItemId={activeRailItemId}
+      visualVariant={visualVariant}
       isSportPage={isSportPage}
       getScrollAnchorId={getSportRailScrollAnchorId}
       hasLiveIndicator={hasSportRailLiveIndicator}

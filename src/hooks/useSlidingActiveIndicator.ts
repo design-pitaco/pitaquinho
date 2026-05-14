@@ -1,10 +1,12 @@
-import { useEffect, useLayoutEffect, useRef, type RefObject } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, type RefObject } from 'react'
 
 interface UseSlidingActiveIndicatorOptions {
   activeKey: string | null | undefined
   containerRef: RefObject<HTMLElement | null>
   getActiveElement: () => HTMLElement | null | undefined
   readyClassName?: string
+  switchingClassName?: string | null
+  switchingDurationMs?: number
   variablePrefix?: string
 }
 
@@ -15,6 +17,8 @@ export function setSlidingActiveIndicator(
   variablePrefix = 'sliding-chip'
 ) {
   if (!containerEl || !activeEl) {
+    containerEl?.style.setProperty(`--${variablePrefix}-indicator-opacity`, '0')
+    containerEl?.style.setProperty(`--${variablePrefix}-indicator-scale`, '0.98')
     containerEl?.classList.remove(readyClassName)
     return
   }
@@ -28,6 +32,8 @@ export function setSlidingActiveIndicator(
   containerEl.style.setProperty(`--${variablePrefix}-active-y`, `${activeY}px`)
   containerEl.style.setProperty(`--${variablePrefix}-active-width`, `${activeRect.width}px`)
   containerEl.style.setProperty(`--${variablePrefix}-active-height`, `${activeRect.height}px`)
+  containerEl.style.setProperty(`--${variablePrefix}-indicator-opacity`, '1')
+  containerEl.style.setProperty(`--${variablePrefix}-indicator-scale`, '1')
   containerEl.classList.add(readyClassName)
 }
 
@@ -36,22 +42,98 @@ export function useSlidingActiveIndicator({
   containerRef,
   getActiveElement,
   readyClassName = 'sliding-chip-group--indicator-ready',
+  switchingClassName,
+  switchingDurationMs = 520,
   variablePrefix = 'sliding-chip',
 }: UseSlidingActiveIndicatorOptions) {
   const getActiveElementRef = useRef(getActiveElement)
+  const previousActiveKeyRef = useRef(activeKey)
+  const switchingFrameRef = useRef<number | null>(null)
+  const switchingResetTimerRef = useRef<number | null>(null)
+  const switchingTargetRef = useRef<{ element: HTMLElement; className: string } | null>(null)
+  const resolvedSwitchingClassName = switchingClassName === undefined && variablePrefix === 'sliding-chip'
+    ? 'sliding-chip-group--indicator-switching'
+    : switchingClassName
+
+  const clearSwitchingMotion = useCallback(() => {
+    if (switchingFrameRef.current !== null) {
+      window.cancelAnimationFrame(switchingFrameRef.current)
+      switchingFrameRef.current = null
+    }
+
+    if (switchingResetTimerRef.current !== null) {
+      window.clearTimeout(switchingResetTimerRef.current)
+      switchingResetTimerRef.current = null
+    }
+
+    const target = switchingTargetRef.current
+    if (target) {
+      target.element.classList.remove(target.className)
+      switchingTargetRef.current = null
+    }
+  }, [])
 
   useLayoutEffect(() => {
     getActiveElementRef.current = getActiveElement
   }, [getActiveElement])
 
   useLayoutEffect(() => {
+    const containerEl = containerRef.current
+    const activeEl = getActiveElementRef.current()
+
     setSlidingActiveIndicator(
-      containerRef.current,
-      getActiveElementRef.current(),
+      containerEl,
+      activeEl,
       readyClassName,
       variablePrefix
     )
-  }, [activeKey, containerRef, readyClassName, variablePrefix])
+
+    const previousActiveKey = previousActiveKeyRef.current
+    previousActiveKeyRef.current = activeKey
+
+    if (
+      !resolvedSwitchingClassName ||
+      !containerEl ||
+      !activeEl ||
+      previousActiveKey === activeKey ||
+      previousActiveKey == null ||
+      activeKey == null
+    ) {
+      return
+    }
+
+    clearSwitchingMotion()
+    containerEl.classList.remove(resolvedSwitchingClassName)
+    switchingTargetRef.current = {
+      element: containerEl,
+      className: resolvedSwitchingClassName,
+    }
+
+    switchingFrameRef.current = window.requestAnimationFrame(() => {
+      switchingFrameRef.current = window.requestAnimationFrame(() => {
+        switchingFrameRef.current = null
+        containerEl.classList.add(resolvedSwitchingClassName)
+
+        switchingResetTimerRef.current = window.setTimeout(() => {
+          containerEl.classList.remove(resolvedSwitchingClassName)
+          switchingResetTimerRef.current = null
+          switchingTargetRef.current = null
+        }, switchingDurationMs)
+      })
+    })
+  }, [
+    activeKey,
+    clearSwitchingMotion,
+    containerRef,
+    readyClassName,
+    resolvedSwitchingClassName,
+    switchingDurationMs,
+    variablePrefix,
+  ])
+
+  useEffect(() => () => {
+    clearSwitchingMotion()
+  }, [clearSwitchingMotion])
 
   useEffect(() => {
     const containerEl = containerRef.current

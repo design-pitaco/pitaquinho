@@ -8,6 +8,7 @@ import type { ProductMode } from './types/home'
 const defaultProduct: ProductMode = 'apostas'
 const productRoutes: ProductMode[] = ['apostas', 'cassino']
 const liquidGlassRouteSegment = 'header-liquid-glass'
+const liquidGlassNewRouteSegment = 'liquid-glass-new'
 
 const getBasePath = () => {
   const baseUrl = import.meta.env.BASE_URL || '/'
@@ -27,6 +28,8 @@ const stripBasePath = (pathname: string) => {
 const getHeaderVariantFromPath = (pathname: string): HeaderVisualVariant => {
   const routeSegments = stripBasePath(pathname).split('/').filter(Boolean)
 
+  if (routeSegments.includes(liquidGlassNewRouteSegment)) return 'liquid-glass-new'
+
   return routeSegments.includes(liquidGlassRouteSegment) ? 'liquid-glass' : 'default'
 }
 
@@ -39,6 +42,7 @@ const resolveProductFromPath = (pathname: string) => {
   const expectedSegments = [
     product,
     headerVariant === 'liquid-glass' ? liquidGlassRouteSegment : '',
+    headerVariant === 'liquid-glass-new' ? liquidGlassNewRouteSegment : '',
   ].filter(Boolean)
 
   return {
@@ -48,9 +52,16 @@ const resolveProductFromPath = (pathname: string) => {
   }
 }
 
-const buildProductPath = (product: ProductMode, headerVariant: HeaderVisualVariant = 'default') => {
+const buildProductPath = (
+  product: ProductMode,
+  headerVariant: HeaderVisualVariant = 'default'
+) => {
   const basePath = getBasePath()
-  const variantPath = headerVariant === 'liquid-glass' ? `/${liquidGlassRouteSegment}` : ''
+  const variantPath = headerVariant === 'liquid-glass'
+    ? `/${liquidGlassRouteSegment}`
+    : headerVariant === 'liquid-glass-new'
+      ? `/${liquidGlassNewRouteSegment}`
+      : ''
   return `${basePath}/${product}${variantPath}`
 }
 
@@ -93,7 +104,7 @@ function App() {
         activeProduct={productRoute.product}
         onProductChange={handleProductChange}
       />
-      <Navbar activeProduct={productRoute.product} />
+      <Navbar activeProduct={productRoute.product} visualVariant={productRoute.headerVariant} />
     </>
   )
 }

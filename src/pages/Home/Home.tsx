@@ -622,6 +622,7 @@ export function Home({
 
   const headerRail = isBetsProduct ? (
     <SportRail
+      visualVariant={headerVariant}
       activeSport={activeSport}
       selectedCompetitionId={selectedCompetition?.id ?? null}
       selectedCompetitionName={selectedCompetition?.name ?? null}
@@ -631,6 +632,7 @@ export function Home({
     />
   ) : (
     <CasinoRail
+      visualVariant={headerVariant}
       activeCategory={activeCasinoCategory}
       onCategoryChange={handleCasinoCategoryChange}
     />
@@ -641,6 +643,7 @@ export function Home({
     'home--header-morph-active',
     'home--novo-trilho',
     'home--no-dividers',
+    headerVariant === 'liquid-glass-new' ? 'home--liquid-glass-new' : '',
     activeProduct === 'cassino' ? 'home--casino-active' : '',
     displayActiveSport ? 'home--sport-active' : '',
     usesHeaderEventRail ? 'home--event-rail-active' : '',

@@ -15,7 +15,7 @@ interface HeaderProps {
   children?: ReactNode
 }
 
-export type HeaderVisualVariant = 'default' | 'liquid-glass'
+export type HeaderVisualVariant = 'default' | 'liquid-glass' | 'liquid-glass-new'
 
 const balanceDisplayOptions = ['R$ 3.400,00', 'R$ 3.400', 'R$ 3.4k']
 const headerLogoExpandedWidth = 103
@@ -35,6 +35,7 @@ export function Header({
   const [accountActionsWidth, setAccountActionsWidth] = useState(124)
   const [isLogoCompact, setIsLogoCompact] = useState(false)
   const [displayProduct, setDisplayProduct] = useState<ProductMode>(activeProduct)
+  const [isToggleSwitching, setIsToggleSwitching] = useState(false)
   const headerTopRef = useRef<HTMLDivElement>(null)
   const toggleRef = useRef<HTMLButtonElement>(null)
   const accountActionsRef = useRef<HTMLDivElement>(null)
@@ -44,6 +45,8 @@ export function Header({
   const balanceMeasureRefs = useRef<(HTMLSpanElement | null)[]>([])
   const pointerProductChangeRef = useRef<ProductMode | null>(null)
   const pointerProductChangeResetTimerRef = useRef<number | null>(null)
+  const toggleSwitchingFrameRef = useRef<number | null>(null)
+  const toggleSwitchingResetTimerRef = useRef<number | null>(null)
 
   const clearPointerProductChangeResetTimer = () => {
     if (pointerProductChangeResetTimerRef.current === null) return
@@ -52,7 +55,38 @@ export function Header({
     pointerProductChangeResetTimerRef.current = null
   }
 
+  const clearToggleSwitchingTimers = () => {
+    if (toggleSwitchingFrameRef.current !== null) {
+      window.cancelAnimationFrame(toggleSwitchingFrameRef.current)
+      toggleSwitchingFrameRef.current = null
+    }
+
+    if (toggleSwitchingResetTimerRef.current !== null) {
+      window.clearTimeout(toggleSwitchingResetTimerRef.current)
+      toggleSwitchingResetTimerRef.current = null
+    }
+  }
+
+  const restartLiquidToggleMotion = () => {
+    if (visualVariant !== 'liquid-glass' && visualVariant !== 'liquid-glass-new') return
+
+    clearToggleSwitchingTimers()
+    setIsToggleSwitching(false)
+    toggleSwitchingFrameRef.current = window.requestAnimationFrame(() => {
+      toggleSwitchingFrameRef.current = null
+      setIsToggleSwitching(true)
+      toggleSwitchingResetTimerRef.current = window.setTimeout(() => {
+        setIsToggleSwitching(false)
+        toggleSwitchingResetTimerRef.current = null
+      }, 560)
+    })
+  }
+
   const scheduleProductChange = (nextProduct: ProductMode) => {
+    if (displayProduct !== nextProduct) {
+      restartLiquidToggleMotion()
+    }
+
     flushSync(() => {
       if (displayProduct !== nextProduct) {
         setDisplayProduct(nextProduct)
@@ -92,6 +126,7 @@ export function Header({
 
   useLayoutEffect(() => () => {
     clearPointerProductChangeResetTimer()
+    clearToggleSwitchingTimers()
   }, [])
 
   useLayoutEffect(() => {
@@ -194,7 +229,8 @@ export function Header({
       className={[
         'header',
         isSportPage ? 'header--sport-active' : 'header--competition-rail',
-        visualVariant === 'liquid-glass' ? 'header--liquid-glass' : '',
+        visualVariant === 'liquid-glass' || visualVariant === 'liquid-glass-new' ? 'header--liquid-glass' : '',
+        visualVariant === 'liquid-glass-new' ? 'header--liquid-glass-new' : '',
         isLogoCompact ? 'header--compact-logo' : '',
       ]
         .filter(Boolean)
@@ -211,12 +247,19 @@ export function Header({
         <button
           ref={toggleRef}
           type="button"
-          className={`header__toggle header__toggle--${displayProduct}`}
+          className={[
+            'header__toggle',
+            `header__toggle--${displayProduct}`,
+            isToggleSwitching ? 'header__toggle--liquid-switching' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
           aria-label={`Alternar para ${productLabels[displayProduct === 'apostas' ? 'cassino' : 'apostas'].toLowerCase()}`}
           aria-pressed={displayProduct === 'cassino'}
           onPointerDown={handleTogglePointerDown}
           onClick={handleToggleClick}
         >
+          <span className="header__toggle-indicator" aria-hidden="true" />
           <span
             className={`header__toggle-btn${displayProduct === 'apostas' ? ' header__toggle-btn--active' : ''}`}
           >

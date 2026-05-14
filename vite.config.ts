@@ -3,8 +3,8 @@ import react from '@vitejs/plugin-react'
 
 const basePath = '/pitaquinho'
 
-export default defineConfig({
-  base: `${basePath}/`,
+export default defineConfig(({ command }) => ({
+  base: command === 'serve' ? '/' : `${basePath}/`,
   plugins: [
     react(),
     {
@@ -32,4 +32,4 @@ export default defineConfig({
       },
     },
   },
-})
+}))

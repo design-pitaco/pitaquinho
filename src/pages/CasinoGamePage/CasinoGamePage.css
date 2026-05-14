@@ -51,7 +51,7 @@
 }
 
 .casino-game-page--closing .casino-game-page__sheet-slide {
-  animation: casino-game-page__sheet-out 360ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: casino-game-page__sheet-out 0.3s ease-out forwards;
 }
 
 @keyframes casino-game-page__sheet-in {
