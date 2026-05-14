@@ -360,12 +360,6 @@
   pointer-events: none;
 }
 
-.casino-game-page--closing:not(.casino-game-page--expansion-started) .casino-game-page__poster-rail-shell {
-  opacity: 1;
-  transform: translate3d(0, 100dvh, 0);
-  pointer-events: none;
-}
-
 .casino-game-page--expansion-started .casino-game-page__poster-rail,
 .casino-game-page--expansion-started .casino-game-page__poster-rail *,
 .casino-game-page--expanded .casino-game-page__poster-rail,
@@ -439,30 +433,10 @@
   cursor: pointer;
 }
 
-.casino-game-page__poster-card::before {
-  content: '';
-  position: absolute;
-  top: 12px;
-  left: 50%;
-  z-index: 0;
-  width: 142%;
-  aspect-ratio: 1;
-  background: url('../../assets/blurJogoSelecionado.png') center / contain no-repeat;
-  filter: brightness(1.35) saturate(1.18);
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, -48%);
-  transition: opacity 180ms ease;
-}
-
 .casino-game-page__poster-card--active {
   width: var(--casino-game-poster-active-width, 140px);
   flex-basis: var(--casino-game-poster-active-width, 140px);
   margin-top: 0;
-  opacity: 1;
-}
-
-.casino-game-page__poster-card--active::before {
   opacity: 1;
 }
 
