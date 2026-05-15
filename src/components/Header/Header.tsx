@@ -11,6 +11,8 @@ interface HeaderProps {
   activeProduct?: ProductMode
   activeSport?: string | null
   rail?: ReactNode
+  showMenuButton?: boolean
+  changeProductOnPointerDown?: boolean
   onProductChange?: (product: ProductMode) => void
   children?: ReactNode
 }
@@ -27,12 +29,14 @@ export function Header({
   activeProduct = 'apostas',
   activeSport,
   rail,
+  showMenuButton = true,
+  changeProductOnPointerDown = true,
   onProductChange,
   children,
 }: HeaderProps = {}) {
   const isSportPage = !!activeSport && activeSport !== 'destaques'
   const [balanceDisplayValue, setBalanceDisplayValue] = useState(balanceDisplayOptions[0])
-  const [accountActionsWidth, setAccountActionsWidth] = useState(124)
+  const [accountActionsWidth, setAccountActionsWidth] = useState(() => showMenuButton ? 124 : 72)
   const [isLogoCompact, setIsLogoCompact] = useState(false)
   const [displayProduct, setDisplayProduct] = useState<ProductMode>(activeProduct)
   const [isToggleSwitching, setIsToggleSwitching] = useState(false)
@@ -96,6 +100,7 @@ export function Header({
   }
 
   const handleTogglePointerDown = (event: PointerEvent<HTMLButtonElement>) => {
+    if (!changeProductOnPointerDown) return
     if (event.pointerType === 'mouse' && event.button !== 0) return
 
     const nextProduct = displayProduct === 'apostas' ? 'cassino' : 'apostas'
@@ -141,7 +146,8 @@ export function Header({
       const toggleEl = toggleRef.current
       const accountActionsEl = accountActionsRef.current
       const menuEl = accountActionsEl?.querySelector<HTMLElement>('.header__menu-btn')
-      if (!headerTopEl || !toggleEl || !accountActionsEl || !menuEl) return
+      if (!headerTopEl || !toggleEl || !accountActionsEl) return
+      if (showMenuButton && !menuEl) return
 
       const headerTopRect = headerTopEl.getBoundingClientRect()
       const headerTopStyle = window.getComputedStyle(headerTopEl)
@@ -150,8 +156,8 @@ export function Header({
         - (parseFloat(headerTopStyle.paddingLeft) || 0)
         - (parseFloat(headerTopStyle.paddingRight) || 0)
       const toggleWidth = toggleEl.getBoundingClientRect().width
-      const menuWidth = menuEl.getBoundingClientRect().width
-      const accountGap = parseFloat(accountActionsStyle.columnGap || accountActionsStyle.gap) || 0
+      const menuWidth = showMenuButton ? menuEl?.getBoundingClientRect().width ?? 0 : 0
+      const accountGap = showMenuButton ? parseFloat(accountActionsStyle.columnGap || accountActionsStyle.gap) || 0 : 0
       const balanceLabelWidth = balanceLabelRef.current?.getBoundingClientRect().width ?? 0
 
       const getBalanceTextWidth = (option: string, index: number) => {
@@ -226,7 +232,7 @@ export function Header({
       resizeObserver?.disconnect()
       window.removeEventListener('resize', updateHeaderLayout)
     }
-  }, [])
+  }, [showMenuButton])
 
   return (
     <header
@@ -235,6 +241,7 @@ export function Header({
         isSportPage ? 'header--sport-active' : 'header--competition-rail',
         visualVariant === 'liquid-glass' || visualVariant === 'liquid-glass-new' ? 'header--liquid-glass' : '',
         visualVariant === 'liquid-glass-new' ? 'header--liquid-glass-new' : '',
+        !showMenuButton ? 'header--balance-only' : '',
         isLogoCompact ? 'header--compact-logo' : '',
       ]
         .filter(Boolean)
@@ -296,9 +303,11 @@ export function Header({
               ))}
             </span>
           </div>
-          <button type="button" className="header__menu-btn" aria-label="Abrir menu">
-            <ListIcon aria-hidden="true" className="header__menu-icon" weight="bold" />
-          </button>
+          {showMenuButton && (
+            <button type="button" className="header__menu-btn" aria-label="Abrir menu">
+              <ListIcon aria-hidden="true" className="header__menu-icon" weight="bold" />
+            </button>
+          )}
         </div>
       </div>
 

@@ -9,6 +9,8 @@ import type { HeaderVisualVariant } from '../Header'
 interface NavbarProps {
   activeProduct?: ProductMode
   visualVariant?: HeaderVisualVariant
+  activeItemId?: string
+  onItemSelect?: (itemId: string) => void
 }
 
 const navbarLiquidItemSwitchMs = 560
@@ -25,11 +27,15 @@ const isIosWebKitBrowser = () => {
 export function Navbar({
   activeProduct = 'apostas',
   visualVariant = 'default',
+  activeItemId: controlledActiveItemId,
+  onItemSelect,
 }: NavbarProps = {}) {
   const navbarConfig = productNavbarConfigs[activeProduct]
+  const isControlledActiveItem = controlledActiveItemId !== undefined
+  const configuredActiveItemId = controlledActiveItemId ?? navbarConfig.activeItemId
   const isLiquidGlassV2 = visualVariant === 'liquid-glass-new'
   const useIosLiquidFallback = isLiquidGlassV2 && isIosWebKitBrowser()
-  const [selectedItemId, setSelectedItemId] = useState(navbarConfig.activeItemId)
+  const [selectedItemId, setSelectedItemId] = useState(configuredActiveItemId)
   const [isItemSwitching, setIsItemSwitching] = useState(false)
   const itemsRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<Record<string, HTMLButtonElement | null>>({})
@@ -51,7 +57,7 @@ export function Navbar({
     'navbar',
     isLiquidGlassV2 ? 'navbar--liquid-v2' : '',
     useIosLiquidFallback ? 'navbar--liquid-v2-ios' : '',
-    isLiquidGlassV2 && activeProduct === 'cassino' ? 'navbar--liquid-v2-casino' : '',
+    isLiquidGlassV2 ? 'navbar--liquid-v2-casino' : '',
     isLiquidGlassV2 && isItemSwitching ? 'navbar--liquid-item-switching' : '',
   ]
     .filter(Boolean)
@@ -97,8 +103,15 @@ export function Navbar({
 
   const selectNavbarItem = useCallback((itemId: string) => {
     restartLiquidItemMotion()
-    setSelectedItemId(itemId)
-  }, [restartLiquidItemMotion])
+    if (!isControlledActiveItem) {
+      setSelectedItemId(itemId)
+    }
+    onItemSelect?.(itemId)
+  }, [isControlledActiveItem, onItemSelect, restartLiquidItemMotion])
+
+  useEffect(() => {
+    setSelectedItemId(configuredActiveItemId)
+  }, [configuredActiveItemId])
 
   const handleItemPointerDown = (itemId: string) => (event: PointerEvent<HTMLButtonElement>) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return

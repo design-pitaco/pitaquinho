@@ -225,6 +225,14 @@
   line-height: 1.2;
 }
 
+.header--balance-only .header__account-actions {
+  gap: 0;
+}
+
+.header--balance-only .header__balance {
+  flex: 0 1 auto;
+}
+
 .header__menu-btn {
   display: flex;
   align-items: center;

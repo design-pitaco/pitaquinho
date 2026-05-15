@@ -198,6 +198,11 @@ img {
   transform: scale3d(var(--sliding-chip-indicator-scale, 1), var(--sliding-chip-indicator-scale, 1), 1);
 }
 
+.sliding-chip-group--indicator-instant .sliding-chip-indicator,
+.sliding-chip-group--indicator-instant .sliding-chip-indicator::before {
+  transition: none;
+}
+
 .sliding-chip-group--indicator-switching .sliding-chip-indicator::before {
   animation:
     sliding-chip-liquid-toggle-squish 520ms cubic-bezier(0.2, 1, 0.28, 1),

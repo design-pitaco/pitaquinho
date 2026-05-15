@@ -1,0 +1,500 @@
+.promotions-page {
+  --sport-header-transition: 160ms cubic-bezier(0.2, 0, 0, 1);
+  --highlight-header-bg-height: 192px;
+  --header-top-padding-y: 20px;
+  --promotions-filter-padding-top: 20px;
+  --promotions-filter-padding-bottom: 24px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #131313;
+  padding-top: 192px;
+  padding-bottom: var(--navbar-page-bottom-padding);
+  scrollbar-width: none;
+  transition: padding-top var(--sport-header-transition);
+}
+
+.promotions-page::-webkit-scrollbar {
+  display: none;
+}
+
+.promotions-page--header-compact {
+  --highlight-header-bg-height: 160px;
+  --header-top-padding-y: 12px;
+  --promotions-filter-padding-top: 12px;
+  --promotions-filter-padding-bottom: 12px;
+  padding-top: 160px;
+}
+
+.promotions-page .header__bg-gradient {
+  height: 168px;
+  background-size: 100% 168px;
+}
+
+.promotions-page .header__bg-dark {
+  height: calc(var(--highlight-header-bg-height) + 72px);
+}
+
+.promotions-page__tabs {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.16);
+  overflow: hidden;
+}
+
+.promotions-page__tabs-track {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.promotions-page__tabs-track::-webkit-scrollbar {
+  display: none;
+}
+
+.promotions-page__tab {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: #a8a8a8;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    color 180ms ease,
+    transform 120ms ease;
+}
+
+.promotions-page__tab:active {
+  transform: scale(0.96);
+}
+
+.promotions-page__tab:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.68);
+  outline-offset: -2px;
+}
+
+.promotions-page__tab-label {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  color: currentColor;
+  font-family: 'Red Hat Text', sans-serif;
+  font-size: var(--Typography-font-size-14, 14px);
+  font-style: normal;
+  font-weight: var(--Typography-font-weight-bold, 700);
+  line-height: 150%;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.promotions-page__tab--active {
+  color: var(--Tokens-text-text-01, #fff);
+}
+
+.promotions-page__tab-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 0;
+  width: 0;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(0, 0, 0);
+  transform-origin: center;
+  will-change: transform, width, opacity;
+}
+
+.promotions-page__tab-indicator--animated {
+  transition:
+    transform 360ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    width 360ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 120ms ease;
+}
+
+.promotions-page__tab-indicator::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #4b20ff 0%, #9730ff 100%);
+}
+
+.promotions-page__filters {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: var(--promotions-filter-padding-top) 12px var(--promotions-filter-padding-bottom);
+  scrollbar-width: none;
+  transition: padding var(--sport-header-transition);
+  -webkit-overflow-scrolling: touch;
+  -ms-overflow-style: none;
+}
+
+.promotions-page__filters::-webkit-scrollbar {
+  display: none;
+}
+
+.promotions-page__filter-chip {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 24px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 160px;
+  background-color: #1a1a1a;
+  color: #a8a8a8;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    color 160ms ease,
+    transform 120ms ease;
+}
+
+.promotions-page__filter-chip:active {
+  transform: scale(0.96);
+}
+
+.promotions-page__filter-chip:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.68);
+  outline-offset: 2px;
+}
+
+.promotions-page__filter-chip--active {
+  background: transparent;
+  color: #ffffff;
+}
+
+.promotions-page__filter-chip--active::before {
+  display: none;
+}
+
+.promotions-page--liquid-glass-new .sliding-chip-indicator {
+  background: transparent;
+}
+
+.promotions-page--liquid-glass-new .sliding-chip-indicator::before {
+  background:
+    radial-gradient(120% 130% at 18% 0%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.04) 38%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(45deg, rgba(82, 40, 255, 0.42) 0.62%, rgba(174, 24, 255, 0.42) 100%),
+    rgba(19, 19, 19, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.08),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.08),
+    0 0 14px rgba(174, 24, 255, 0.18),
+    0 6px 16px rgba(82, 40, 255, 0.16);
+  z-index: 1;
+}
+
+.promotions-page--liquid-glass-new .sliding-chip-indicator::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.02) 58%, rgba(0, 0, 0, 0.06)),
+    radial-gradient(90% 120% at 12% 0%, rgba(255, 255, 255, 0.16), transparent 62%);
+}
+
+.promotions-page--liquid-glass-new .sliding-chip-group--indicator-switching .sliding-chip-indicator::after {
+  animation: sliding-chip-liquid-toggle-shimmer 520ms ease;
+}
+
+.promotions-page__content {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(var(--app-viewport-height) + 180px);
+  background: #131313;
+}
+
+.promotions-missions-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 0 24px;
+  border-bottom: 2px solid #242424;
+}
+
+.promotions-page__content > .promotions-missions-section:first-child {
+  padding-top: 0;
+  border-bottom: 0;
+}
+
+.promotions-missions-section__header {
+  display: flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 12px;
+}
+
+.promotions-missions-section__title {
+  margin: 0;
+  color: #ffffff;
+  font-family: 'Red Hat Text', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+.promotions-missions-section__list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 0 12px;
+  scroll-padding-left: 12px;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+  overscroll-behavior-x: none;
+}
+
+.promotions-missions-section__list--dragging {
+  cursor: grabbing;
+  scroll-snap-type: none;
+  scroll-behavior: auto;
+}
+
+.promotions-missions-section__list::-webkit-scrollbar {
+  display: none;
+}
+
+.promotions-mission-card {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  width: 304px;
+  overflow: hidden;
+  scroll-snap-align: start;
+  border-radius: 12px;
+  background: var(--tokens-layer-layer-01, #1a1a1a);
+  color: #ffffff;
+}
+
+.promotions-mission-card__media {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 116px;
+  padding: 16px 20px;
+  background: var(
+    --promotions-mission-card-image,
+    linear-gradient(135deg, #ff0d0d 0%, #ee1010 100%)
+  );
+  background-position: center;
+  background-size: cover;
+}
+
+.promotions-mission-card__expires {
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: calc(100% - 40px);
+  color: #ffffff;
+}
+
+.promotions-mission-card__expires-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #ff4b4b;
+}
+
+.promotions-mission-card__expires-text {
+  overflow: hidden;
+  color: currentColor;
+  font-family: 'Red Hat Text', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.promotions-mission-card__media-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 158px;
+  overflow: hidden;
+  color: #ffffff;
+  font-family: 'Red Hat Display', 'Red Hat Text', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.promotions-mission-card__media-title-line {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.promotions-mission-card__body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+  background: var(--tokens-layer-layer-01, #1a1a1a);
+}
+
+.promotions-mission-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.promotions-mission-card__tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #ffbe8a 0%, #f4bffd 100%);
+  color: #000000;
+  font-family: 'Red Hat Text', sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.promotions-mission-card__title {
+  margin: 0;
+  overflow: hidden;
+  color: #ffffff;
+  font-family: 'Red Hat Display', 'Red Hat Text', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.promotions-mission-card__description {
+  display: -webkit-box;
+  min-height: 54px;
+  margin: 0;
+  overflow: hidden;
+  color: #a8a8a8;
+  font-family: 'Red Hat Text', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.promotions-mission-card__actions {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.promotions-mission-card__button,
+.promotions-mission-card__link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  border: 0;
+  border-radius: 160px;
+  font-family: 'Red Hat Text', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.promotions-mission-card__button {
+  width: 60px;
+  padding: 0 16px;
+  background: linear-gradient(28deg, #5228ff 0.62%, #ae18ff 100%);
+  color: #ffffff;
+}
+
+.promotions-mission-card__link-button {
+  padding: 0;
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid var(--tokens-background-background-inverse, #f3f3f3);
+  padding: 0 16px;
+}
+
+.promotions-mission-card__button:focus-visible,
+.promotions-mission-card__link-button:focus-visible {
+  outline: 2px solid rgba(82, 40, 255, 0.72);
+  outline-offset: 2px;
+}
+
+@media (max-width: 499px) {
+  .promotions-page {
+    position: fixed;
+    inset: 0;
+    height: var(--app-viewport-height);
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-padding-bottom: var(--navbar-page-bottom-padding);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .promotions-page,
+  .promotions-page__filters,
+  .promotions-page__tab {
+    transition: none;
+  }
+
+}

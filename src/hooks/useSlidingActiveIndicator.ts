@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, type RefObject } from 
 
 interface UseSlidingActiveIndicatorOptions {
   activeKey: string | null | undefined
+  refreshKey?: unknown
   containerRef: RefObject<HTMLElement | null>
   getActiveElement: () => HTMLElement | null | undefined
   readyClassName?: string
@@ -17,9 +18,16 @@ export function setSlidingActiveIndicator(
   readyClassName = 'sliding-chip-group--indicator-ready',
   variablePrefix = 'sliding-chip'
 ) {
+  const indicatorEl = containerEl?.querySelector<HTMLElement>('.sliding-chip-indicator')
+
   if (!containerEl || !activeEl) {
     containerEl?.style.setProperty(`--${variablePrefix}-indicator-opacity`, '0')
     containerEl?.style.setProperty(`--${variablePrefix}-indicator-scale`, '0.98')
+    if (indicatorEl) {
+      indicatorEl.style.width = '0px'
+      indicatorEl.style.opacity = '0'
+      indicatorEl.style.transform = 'translate3d(0, 0, 0)'
+    }
     containerEl?.classList.remove(readyClassName)
     return
   }
@@ -35,11 +43,18 @@ export function setSlidingActiveIndicator(
   containerEl.style.setProperty(`--${variablePrefix}-active-height`, `${activeRect.height}px`)
   containerEl.style.setProperty(`--${variablePrefix}-indicator-opacity`, '1')
   containerEl.style.setProperty(`--${variablePrefix}-indicator-scale`, '1')
+  if (indicatorEl) {
+    indicatorEl.style.width = `${activeRect.width}px`
+    indicatorEl.style.height = `${activeRect.height}px`
+    indicatorEl.style.opacity = '1'
+    indicatorEl.style.transform = `translate3d(${activeX}px, ${activeY}px, 0)`
+  }
   containerEl.classList.add(readyClassName)
 }
 
 export function useSlidingActiveIndicator({
   activeKey,
+  refreshKey,
   containerRef,
   getActiveElement,
   readyClassName = 'sliding-chip-group--indicator-ready',
@@ -50,6 +65,7 @@ export function useSlidingActiveIndicator({
 }: UseSlidingActiveIndicatorOptions) {
   const getActiveElementRef = useRef(getActiveElement)
   const previousActiveKeyRef = useRef(activeKey)
+  const instantFrameRef = useRef<number | null>(null)
   const switchingFrameRef = useRef<number | null>(null)
   const switchingResetTimerRef = useRef<number | null>(null)
   const switchingTargetRef = useRef<{ element: HTMLElement; className: string } | null>(null)
@@ -90,6 +106,18 @@ export function useSlidingActiveIndicator({
       containerEl?.classList.remove(resolvedClippedClassName)
     }
 
+    const previousActiveKey = previousActiveKeyRef.current
+    const isLayoutRefresh = previousActiveKey === activeKey
+
+    if (instantFrameRef.current !== null) {
+      window.cancelAnimationFrame(instantFrameRef.current)
+      instantFrameRef.current = null
+    }
+
+    if (containerEl && isLayoutRefresh) {
+      containerEl.classList.add('sliding-chip-group--indicator-instant')
+    }
+
     setSlidingActiveIndicator(
       containerEl,
       activeEl,
@@ -97,8 +125,14 @@ export function useSlidingActiveIndicator({
       variablePrefix
     )
 
-    const previousActiveKey = previousActiveKeyRef.current
     previousActiveKeyRef.current = activeKey
+
+    if (containerEl && isLayoutRefresh) {
+      instantFrameRef.current = window.requestAnimationFrame(() => {
+        containerEl.classList.remove('sliding-chip-group--indicator-instant')
+        instantFrameRef.current = null
+      })
+    }
 
     if (
       !resolvedSwitchingClassName ||
@@ -140,6 +174,7 @@ export function useSlidingActiveIndicator({
     activeKey,
     clearSwitchingMotion,
     containerRef,
+    refreshKey,
     readyClassName,
     resolvedClippedClassName,
     resolvedSwitchingClassName,
@@ -148,14 +183,20 @@ export function useSlidingActiveIndicator({
   ])
 
   useEffect(() => () => {
+    if (instantFrameRef.current !== null) {
+      window.cancelAnimationFrame(instantFrameRef.current)
+      instantFrameRef.current = null
+    }
     clearSwitchingMotion()
   }, [clearSwitchingMotion])
 
   useEffect(() => {
     const containerEl = containerRef.current
     if (!containerEl) return
+    let updateFrame: number | null = null
 
     const updateIndicator = () => {
+      updateFrame = null
       setSlidingActiveIndicator(
         containerEl,
         getActiveElementRef.current(),
@@ -163,18 +204,29 @@ export function useSlidingActiveIndicator({
         variablePrefix
       )
     }
+    const scheduleUpdateIndicator = () => {
+      if (updateFrame !== null) return
+      updateFrame = window.requestAnimationFrame(updateIndicator)
+    }
     const activeEl = getActiveElementRef.current()
     const resizeObserver = typeof ResizeObserver !== 'undefined'
-      ? new ResizeObserver(updateIndicator)
+      ? new ResizeObserver(scheduleUpdateIndicator)
       : null
 
     resizeObserver?.observe(containerEl)
     if (activeEl) resizeObserver?.observe(activeEl)
-    window.addEventListener('resize', updateIndicator)
+    window.addEventListener('resize', scheduleUpdateIndicator)
+    window.addEventListener('scroll', scheduleUpdateIndicator, true)
+    containerEl.addEventListener('transitionend', scheduleUpdateIndicator)
 
     return () => {
+      if (updateFrame !== null) {
+        window.cancelAnimationFrame(updateFrame)
+      }
       resizeObserver?.disconnect()
-      window.removeEventListener('resize', updateIndicator)
+      window.removeEventListener('resize', scheduleUpdateIndicator)
+      window.removeEventListener('scroll', scheduleUpdateIndicator, true)
+      containerEl.removeEventListener('transitionend', scheduleUpdateIndicator)
     }
   }, [activeKey, containerRef, readyClassName, variablePrefix])
 }
