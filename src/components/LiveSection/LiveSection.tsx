@@ -161,8 +161,10 @@ const footballMarketChips: MarketChip[] = [
 ]
 
 const basketballMarketChips: MarketChip[] = [
-  { id: 'vencedor', label: 'Vencedor' },
+  { id: 'vencedor', label: 'Resultado Final' },
+  { id: 'pontos-jogador', label: 'Pontos do Jogador' },
   { id: 'total-pontos', label: 'Total de Pontos' },
+  { id: 'assistencias', label: 'Assistências' },
   { id: 'handicap', label: 'Handicap' },
   { id: 'q3-total', label: '3° Quarto - Total de Pontos' },
   { id: 'q4-total', label: '4° Quarto - Total de Pontos' },

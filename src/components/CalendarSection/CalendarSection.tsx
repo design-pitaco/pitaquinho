@@ -3,6 +3,12 @@ import { CaretRightIcon, CaretUpIcon } from '@phosphor-icons/react'
 import '../PreMatchSection/PreMatchSection.css'
 import './CalendarSection.css'
 import { LiveMatchCard } from '../LiveMatchCard'
+import {
+  PreMatchPlayerPropCard,
+  type MatchPlayerProp,
+  type PlayerPropOption,
+  type TeamPlayerProfile,
+} from '../PreMatchSection/PreMatchSection'
 import type { LiveEventMatch, LiveEventOpenPayload } from '../../pages/LiveEventPage'
 import { getTeamLogo } from '../../data/teamLogos'
 import { useHomeMarketStickyState } from '../../hooks/useHomeMarketStickyVisible'
@@ -18,6 +24,8 @@ import reiAntecipaBasquete from '../../assets/reiAntecipaBasquete.png'
 import iconBasquete from '../../assets/iconSports/basketball.png'
 import iconFutebol from '../../assets/iconSports/soccer.png'
 import iconTenis from '../../assets/iconSports/tennis.png'
+import playerAvatarFutebol from '../../assets/playerAvatarFutebol.svg'
+import playerAvatarBasquete from '../../assets/playerAvatarBasquete.svg'
 import { getCompetitionBadge } from '../../data/competitionBadges'
 import { getTennisPlayerCountryIcon } from '../../data/tennisCountryIcons'
 // Flags
@@ -84,15 +92,19 @@ interface MarketChip {
 
 const footballMarketChips: MarketChip[] = [
   { id: 'resultado-final', label: 'Resultado Final' },
+  { id: 'finalizacao-gol', label: 'Finalizações ao Gol' },
   { id: 'dupla-chance', label: 'Dupla Chance' },
+  { id: 'assistencias', label: 'Assistências' },
   { id: 'ambos-marcam', label: 'Ambos Marcam' },
   { id: 'total-gols', label: 'Total de Gols' },
   { id: 'escanteios', label: 'Total de Escanteios' },
 ]
 
 const basketballMarketChips: MarketChip[] = [
-  { id: 'vencedor', label: 'Vencedor' },
+  { id: 'vencedor', label: 'Resultado Final' },
+  { id: 'pontos-jogador', label: 'Pontos do Jogador' },
   { id: 'total-pontos', label: 'Total de Pontos' },
+  { id: 'assistencias', label: 'Assistências' },
   { id: 'handicap', label: 'Handicap' },
   { id: 'q3-total', label: '3° Quarto - Total de Pontos' },
   { id: 'q4-total', label: '4° Quarto - Total de Pontos' },
@@ -106,9 +118,1000 @@ const tennisMarketChips: MarketChip[] = [
 
 const SHORT_COMPETITION_EVENT_LIMIT = 3
 const liveEventSports = new Set(['futebol', 'basquete'])
+const CALENDAR_PLAYER_PROPS_PER_EVENT = 3
+const CALENDAR_FOOTBALL_FINISHING_MARKET_ID = 'finalizacao-gol'
+const CALENDAR_FOOTBALL_ASSISTS_MARKET_ID = 'assistencias'
+const CALENDAR_BASKETBALL_POINTS_MARKET_ID = 'pontos-jogador'
+const CALENDAR_BASKETBALL_ASSISTS_MARKET_ID = 'assistencias'
 
 const getDefaultMarketId = (sport?: string | null) =>
   sport === 'basquete' || sport === 'tenis' ? 'vencedor' : 'resultado-final'
+
+const calendarPlayerPropOptions = (values: Array<[string, string]>): PlayerPropOption[] =>
+  values.map(([label, odd], index) => ({ label, odd, active: index === 1 }))
+
+const calendarFootballFinishingOptionSets = [
+  calendarPlayerPropOptions([['3.0+', '1.78x'], ['4.0+', '1.78x'], ['5.0+', '1.78x']]),
+  calendarPlayerPropOptions([['2.0+', '1.55x'], ['3.0+', '1.92x'], ['4.0+', '2.70x']]),
+  calendarPlayerPropOptions([['1.0+', '1.48x'], ['2.0+', '2.05x'], ['3.0+', '3.60x']]),
+]
+
+const calendarFootballAssistOptionSets = [
+  calendarPlayerPropOptions([['1.0+', '1.68x'], ['2.0+', '2.35x'], ['3.0+', '4.20x']]),
+  calendarPlayerPropOptions([['1.0+', '1.74x'], ['2.0+', '2.50x'], ['3.0+', '4.60x']]),
+  calendarPlayerPropOptions([['1.0+', '1.82x'], ['2.0+', '2.70x'], ['3.0+', '5.10x']]),
+]
+
+const calendarBasketballPointOptionSets = [
+  calendarPlayerPropOptions([['15.5+', '1.62x'], ['20.5+', '1.95x'], ['25.5+', '3.05x']]),
+  calendarPlayerPropOptions([['12.5+', '1.58x'], ['17.5+', '1.88x'], ['22.5+', '2.80x']]),
+  calendarPlayerPropOptions([['8.5+', '1.54x'], ['13.5+', '1.82x'], ['18.5+', '2.60x']]),
+]
+
+const calendarBasketballAssistOptionSets = [
+  calendarPlayerPropOptions([['1.0+', '1.70x'], ['2.0+', '2.15x'], ['3.0+', '3.40x']]),
+  calendarPlayerPropOptions([['1.0+', '1.62x'], ['2.0+', '1.95x'], ['3.0+', '2.90x']]),
+  calendarPlayerPropOptions([['1.0+', '1.54x'], ['2.0+', '1.82x'], ['3.0+', '2.55x']]),
+]
+
+const calendarFootballFinishingPlayersByTeam: Record<string, TeamPlayerProfile[]> = {
+  Flamengo: [
+    { name: 'Pedro', position: 'ATA' },
+    { name: 'Bruno Henrique', position: 'ATA' },
+    { name: 'Everton Cebolinha', position: 'ATA' },
+  ],
+  Cruzeiro: [
+    { name: 'Kaio Jorge', position: 'ATA' },
+    { name: 'Gabigol', position: 'ATA' },
+    { name: 'Lautaro Diaz', position: 'ATA' },
+  ],
+  Internacional: [
+    { name: 'Rafael Borre', position: 'ATA' },
+    { name: 'Enner Valencia', position: 'ATA' },
+    { name: 'Wesley', position: 'ATA' },
+  ],
+  Bragantino: [
+    { name: 'Eduardo Sasha', position: 'ATA' },
+    { name: 'Helinho', position: 'ATA' },
+    { name: 'Thiago Borbas', position: 'ATA' },
+  ],
+  Mirassol: [
+    { name: 'Dellatorre', position: 'ATA' },
+    { name: 'Negueba', position: 'ATA' },
+    { name: 'Fernandinho', position: 'ATA' },
+  ],
+  'São Paulo': [
+    { name: 'Calleri', position: 'ATA' },
+    { name: 'Luciano', position: 'ATA' },
+    { name: 'Lucas Moura', position: 'MEI' },
+  ],
+  Palmeiras: [
+    { name: 'Flaco Lopez', position: 'ATA' },
+    { name: 'Vitor Roque', position: 'ATA' },
+    { name: 'Raphael Veiga', position: 'MEI' },
+  ],
+  Fluminense: [
+    { name: 'Cano', position: 'ATA' },
+    { name: 'Arias', position: 'MEI' },
+    { name: 'Keno', position: 'ATA' },
+  ],
+  Botafogo: [
+    { name: 'Igor Jesus', position: 'ATA' },
+    { name: 'Savarino', position: 'MEI' },
+    { name: 'Tiquinho Soares', position: 'ATA' },
+  ],
+  Bahia: [
+    { name: 'Everaldo', position: 'ATA' },
+    { name: 'Cauly', position: 'MEI' },
+    { name: 'Biel', position: 'ATA' },
+  ],
+  'Atl. Mineiro': [
+    { name: 'Hulk', position: 'ATA' },
+    { name: 'Paulinho', position: 'ATA' },
+    { name: 'Gustavo Scarpa', position: 'MEI' },
+  ],
+  Santos: [
+    { name: 'Neymar Jr', position: 'ATA' },
+    { name: 'Guilherme', position: 'ATA' },
+    { name: 'Soteldo', position: 'MEI' },
+  ],
+  'Atlético Madrid': [
+    { name: 'Julian Alvarez', position: 'ATA' },
+    { name: 'Sorloth', position: 'ATA' },
+    { name: 'Griezmann', position: 'ATA' },
+  ],
+  Inter: [
+    { name: 'Lautaro Martinez', position: 'ATA' },
+    { name: 'Thuram', position: 'ATA' },
+    { name: 'Taremi', position: 'ATA' },
+  ],
+  PSG: [
+    { name: 'Dembele', position: 'ATA' },
+    { name: 'Kvaratskhelia', position: 'ATA' },
+    { name: 'Goncalo Ramos', position: 'ATA' },
+  ],
+  Lyon: [
+    { name: 'Lacazette', position: 'ATA' },
+    { name: 'Mikautadze', position: 'ATA' },
+    { name: 'Nuamah', position: 'ATA' },
+  ],
+  Newcastle: [
+    { name: 'Isak', position: 'ATA' },
+    { name: 'Gordon', position: 'ATA' },
+    { name: 'Barnes', position: 'ATA' },
+  ],
+  Napoli: [
+    { name: 'Osimhen', position: 'ATA' },
+    { name: 'Politano', position: 'ATA' },
+    { name: 'Raspadori', position: 'ATA' },
+  ],
+  'Real Madrid': [
+    { name: 'Vini Jr', position: 'ATA' },
+    { name: 'Mbappé', position: 'ATA' },
+    { name: 'Bellingham', position: 'MEI' },
+  ],
+  Barcelona: [
+    { name: 'Lewandowski', position: 'ATA' },
+    { name: 'Yamal', position: 'ATA' },
+    { name: 'Raphinha', position: 'ATA' },
+  ],
+  Liverpool: [
+    { name: 'Salah', position: 'ATA' },
+    { name: 'Núñez', position: 'ATA' },
+    { name: 'Diaz', position: 'ATA' },
+  ],
+  'Man. City': [
+    { name: 'Haaland', position: 'ATA' },
+    { name: 'Foden', position: 'MEI' },
+    { name: 'De Bruyne', position: 'MEI' },
+  ],
+  Benfica: [
+    { name: 'Di Maria', position: 'ATA' },
+    { name: 'Pavlidis', position: 'ATA' },
+    { name: 'Schjelderup', position: 'ATA' },
+  ],
+  Ajax: [
+    { name: 'Brobbey', position: 'ATA' },
+    { name: 'Berghuis', position: 'MEI' },
+    { name: 'Henderson', position: 'MEI' },
+  ],
+  Arsenal: [
+    { name: 'Saka', position: 'ATA' },
+    { name: 'Havertz', position: 'MEI' },
+    { name: 'Martinelli', position: 'ATA' },
+  ],
+  Chelsea: [
+    { name: 'Palmer', position: 'MEI' },
+    { name: 'Jackson', position: 'ATA' },
+    { name: 'Nkunku', position: 'ATA' },
+  ],
+  Tottenham: [
+    { name: 'Son', position: 'ATA' },
+    { name: 'Solanke', position: 'ATA' },
+    { name: 'Maddison', position: 'MEI' },
+  ],
+  Wolves: [
+    { name: 'Cunha', position: 'ATA' },
+    { name: 'Hwang', position: 'ATA' },
+    { name: 'Neto', position: 'ATA' },
+  ],
+  Brighton: [
+    { name: 'Welbeck', position: 'ATA' },
+    { name: 'Joao Pedro', position: 'ATA' },
+    { name: 'Mitoma', position: 'ATA' },
+  ],
+  'West Ham': [
+    { name: 'Bowen', position: 'ATA' },
+    { name: 'Paqueta', position: 'MEI' },
+    { name: 'Kudus', position: 'ATA' },
+  ],
+  Leeds: [
+    { name: 'Piroe', position: 'ATA' },
+    { name: 'Rutter', position: 'ATA' },
+    { name: 'James', position: 'ATA' },
+  ],
+  Burnley: [
+    { name: 'Foster', position: 'ATA' },
+    { name: 'Rodriguez', position: 'ATA' },
+    { name: 'Brownhill', position: 'MEI' },
+  ],
+  Getafe: [
+    { name: 'Mayoral', position: 'ATA' },
+    { name: 'Greenwood', position: 'ATA' },
+    { name: 'Latasa', position: 'ATA' },
+  ],
+  Elche: [
+    { name: 'Boye', position: 'ATA' },
+    { name: 'Pere Milla', position: 'ATA' },
+    { name: 'Mojica', position: 'LAT' },
+  ],
+  Sevilla: [
+    { name: 'Isaac Romero', position: 'ATA' },
+    { name: 'Lukebakio', position: 'ATA' },
+    { name: 'Ocampos', position: 'ATA' },
+  ],
+  Villarreal: [
+    { name: 'Gerard Moreno', position: 'ATA' },
+    { name: 'Ayoze Perez', position: 'ATA' },
+    { name: 'Baena', position: 'MEI' },
+  ],
+  Alavés: [
+    { name: 'Samu Omorodion', position: 'ATA' },
+    { name: 'Carlos Vicente', position: 'ATA' },
+    { name: 'Rioja', position: 'ATA' },
+  ],
+  Espanyol: [
+    { name: 'Puado', position: 'ATA' },
+    { name: 'Joselu', position: 'ATA' },
+    { name: 'Bare', position: 'MEI' },
+  ],
+  Mallorca: [
+    { name: 'Muriqi', position: 'ATA' },
+    { name: 'Larin', position: 'ATA' },
+    { name: 'Darder', position: 'MEI' },
+  ],
+  Levante: [
+    { name: 'Bouldini', position: 'ATA' },
+    { name: 'Brugué', position: 'ATA' },
+    { name: 'Iborra', position: 'MEI' },
+  ],
+  'B. Leverkusen': [
+    { name: 'Wirtz', position: 'MEI' },
+    { name: 'Boniface', position: 'ATA' },
+    { name: 'Grimaldo', position: 'LAT' },
+  ],
+  Bayern: [
+    { name: 'Harry Kane', position: 'ATA' },
+    { name: 'Musiala', position: 'MEI' },
+    { name: 'Sane', position: 'ATA' },
+  ],
+  'B. Dortmund': [
+    { name: 'Adeyemi', position: 'ATA' },
+    { name: 'Guirassy', position: 'ATA' },
+    { name: 'Brandt', position: 'MEI' },
+  ],
+  'RB Leipzig': [
+    { name: 'Sesko', position: 'ATA' },
+    { name: 'Openda', position: 'ATA' },
+    { name: 'Xavi Simons', position: 'MEI' },
+  ],
+  Wolfsburg: [
+    { name: 'Wind', position: 'ATA' },
+    { name: 'Wimmer', position: 'ATA' },
+    { name: 'Majer', position: 'MEI' },
+  ],
+  Eintracht: [
+    { name: 'Ekitike', position: 'ATA' },
+    { name: 'Marmoush', position: 'ATA' },
+    { name: 'Knauff', position: 'ALA' },
+  ],
+  Augsburg: [
+    { name: 'Demirovic', position: 'ATA' },
+    { name: 'Tietz', position: 'ATA' },
+    { name: 'Vargas', position: 'ATA' },
+  ],
+  Hamburger: [
+    { name: 'Glatzel', position: 'ATA' },
+    { name: 'Selke', position: 'ATA' },
+    { name: 'Königsdörffer', position: 'ATA' },
+  ],
+  Vitória: [
+    { name: 'Osvaldo', position: 'ATA' },
+    { name: 'Alerrandro', position: 'ATA' },
+    { name: 'Matheuzinho', position: 'MEI' },
+  ],
+  Sport: [
+    { name: 'Barletta', position: 'ATA' },
+    { name: 'Gustavo Coutinho', position: 'ATA' },
+    { name: 'Lucas Lima', position: 'MEI' },
+  ],
+  Grêmio: [
+    { name: 'Braithwaite', position: 'ATA' },
+    { name: 'Cristaldo', position: 'MEI' },
+    { name: 'Pavon', position: 'ATA' },
+  ],
+  Juventude: [
+    { name: 'Gilberto', position: 'ATA' },
+    { name: 'Marcelinho', position: 'ATA' },
+    { name: 'Nenê', position: 'MEI' },
+  ],
+}
+
+const calendarFootballAssistPlayersByTeam: Record<string, TeamPlayerProfile[]> = {
+  Flamengo: [
+    { name: 'Arrascaeta', position: 'MEI' },
+    { name: 'Gerson', position: 'MEI' },
+    { name: 'De la Cruz', position: 'MEI' },
+  ],
+  Cruzeiro: [
+    { name: 'Matheus Pereira', position: 'MEI' },
+    { name: 'Lucas Silva', position: 'MEI' },
+    { name: 'Ramiro', position: 'MEI' },
+  ],
+  Internacional: [
+    { name: 'Alan Patrick', position: 'MEI' },
+    { name: 'Bruno Henrique', position: 'MEI' },
+    { name: 'Wanderson', position: 'MEI' },
+  ],
+  Bragantino: [
+    { name: 'Lincoln', position: 'MEI' },
+    { name: 'Jadsom', position: 'MEI' },
+    { name: 'Eric Ramires', position: 'MEI' },
+  ],
+  Mirassol: [
+    { name: 'Chico Kim', position: 'MEI' },
+    { name: 'Gabriel', position: 'MEI' },
+    { name: 'Danielzinho', position: 'MEI' },
+  ],
+  'São Paulo': [
+    { name: 'Lucas Moura', position: 'MEI' },
+    { name: 'Luciano', position: 'MEI' },
+    { name: 'Alisson', position: 'MEI' },
+  ],
+  Palmeiras: [
+    { name: 'Raphael Veiga', position: 'MEI' },
+    { name: 'Mauricio', position: 'MEI' },
+    { name: 'Richard Rios', position: 'MEI' },
+  ],
+  Fluminense: [
+    { name: 'Arias', position: 'MEI' },
+    { name: 'Ganso', position: 'MEI' },
+    { name: 'Lima', position: 'MEI' },
+  ],
+  Botafogo: [
+    { name: 'Savarino', position: 'MEI' },
+    { name: 'Almada', position: 'MEI' },
+    { name: 'Marlon Freitas', position: 'MEI' },
+  ],
+  Bahia: [
+    { name: 'Cauly', position: 'MEI' },
+    { name: 'Everton Ribeiro', position: 'MEI' },
+    { name: 'Jean Lucas', position: 'MEI' },
+  ],
+  'Atl. Mineiro': [
+    { name: 'Gustavo Scarpa', position: 'MEI' },
+    { name: 'Zaracho', position: 'MEI' },
+    { name: 'Bernard', position: 'MEI' },
+  ],
+  Santos: [
+    { name: 'Lucas Lima', position: 'MEI' },
+    { name: 'Soteldo', position: 'MEI' },
+    { name: 'Pituca', position: 'MEI' },
+  ],
+  'Atlético Madrid': [
+    { name: 'Griezmann', position: 'MEI' },
+    { name: 'De Paul', position: 'MEI' },
+    { name: 'Koke', position: 'MEI' },
+  ],
+  Inter: [
+    { name: 'Barella', position: 'MEI' },
+    { name: 'Calhanoglu', position: 'MEI' },
+    { name: 'Mkhitaryan', position: 'MEI' },
+  ],
+  PSG: [
+    { name: 'Vitinha', position: 'MEI' },
+    { name: 'Zaire-Emery', position: 'MEI' },
+    { name: 'Fabian Ruiz', position: 'MEI' },
+  ],
+  Lyon: [
+    { name: 'Cherki', position: 'MEI' },
+    { name: 'Tolisso', position: 'MEI' },
+    { name: 'Caqueret', position: 'MEI' },
+  ],
+  Newcastle: [
+    { name: 'Bruno Guimaraes', position: 'MEI' },
+    { name: 'Tonali', position: 'MEI' },
+    { name: 'Joelinton', position: 'MEI' },
+  ],
+  Napoli: [
+    { name: 'Anguissa', position: 'MEI' },
+    { name: 'Lobotka', position: 'MEI' },
+    { name: 'Zielinski', position: 'MEI' },
+  ],
+  'Real Madrid': [
+    { name: 'Bellingham', position: 'MEI' },
+    { name: 'Modric', position: 'MEI' },
+    { name: 'Valverde', position: 'MEI' },
+  ],
+  Barcelona: [
+    { name: 'Pedri', position: 'MEI' },
+    { name: 'Gavi', position: 'MEI' },
+    { name: 'De Jong', position: 'MEI' },
+  ],
+  Liverpool: [
+    { name: 'Szoboszlai', position: 'MEI' },
+    { name: 'Mac Allister', position: 'MEI' },
+    { name: 'Curtis Jones', position: 'MEI' },
+  ],
+  'Man. City': [
+    { name: 'De Bruyne', position: 'MEI' },
+    { name: 'Foden', position: 'MEI' },
+    { name: 'Bernardo Silva', position: 'MEI' },
+  ],
+  Benfica: [
+    { name: 'Kokcu', position: 'MEI' },
+    { name: 'Aursnes', position: 'MEI' },
+    { name: 'Florentino', position: 'MEI' },
+  ],
+  Ajax: [
+    { name: 'Berghuis', position: 'MEI' },
+    { name: 'Henderson', position: 'MEI' },
+    { name: 'Taylor', position: 'MEI' },
+  ],
+  Arsenal: [
+    { name: 'Odegaard', position: 'MEI' },
+    { name: 'Rice', position: 'MEI' },
+    { name: 'Havertz', position: 'MEI' },
+  ],
+  Chelsea: [
+    { name: 'Palmer', position: 'MEI' },
+    { name: 'Enzo Fernandez', position: 'MEI' },
+    { name: 'Caicedo', position: 'MEI' },
+  ],
+  Tottenham: [
+    { name: 'Maddison', position: 'MEI' },
+    { name: 'Kulusevski', position: 'MEI' },
+    { name: 'Bentancur', position: 'MEI' },
+  ],
+  Wolves: [
+    { name: 'Cunha', position: 'MEI' },
+    { name: 'Joao Gomes', position: 'MEI' },
+    { name: 'Lemina', position: 'MEI' },
+  ],
+  Brighton: [
+    { name: 'Joao Pedro', position: 'MEI' },
+    { name: 'Mitoma', position: 'MEI' },
+    { name: 'Gross', position: 'MEI' },
+  ],
+  'West Ham': [
+    { name: 'Paqueta', position: 'MEI' },
+    { name: 'Kudus', position: 'MEI' },
+    { name: 'Ward-Prowse', position: 'MEI' },
+  ],
+  Leeds: [
+    { name: 'Rutter', position: 'MEI' },
+    { name: 'Gnonto', position: 'MEI' },
+    { name: 'Ampadu', position: 'MEI' },
+  ],
+  Burnley: [
+    { name: 'Brownhill', position: 'MEI' },
+    { name: 'Gudmundsson', position: 'MEI' },
+    { name: 'Koleosho', position: 'MEI' },
+  ],
+  Getafe: [
+    { name: 'Maksimovic', position: 'MEI' },
+    { name: 'Alena', position: 'MEI' },
+    { name: 'Milla', position: 'MEI' },
+  ],
+  Elche: [
+    { name: 'Fidel', position: 'MEI' },
+    { name: 'Febas', position: 'MEI' },
+    { name: 'Josan', position: 'MEI' },
+  ],
+  Sevilla: [
+    { name: 'Rakitic', position: 'MEI' },
+    { name: 'Suso', position: 'MEI' },
+    { name: 'Oliver Torres', position: 'MEI' },
+  ],
+  Villarreal: [
+    { name: 'Baena', position: 'MEI' },
+    { name: 'Parejo', position: 'MEI' },
+    { name: 'Trigueros', position: 'MEI' },
+  ],
+  Alavés: [
+    { name: 'Guridi', position: 'MEI' },
+    { name: 'Blanco', position: 'MEI' },
+    { name: 'Carlos Vicente', position: 'MEI' },
+  ],
+  Espanyol: [
+    { name: 'Darder', position: 'MEI' },
+    { name: 'Bare', position: 'MEI' },
+    { name: 'Melamed', position: 'MEI' },
+  ],
+  Mallorca: [
+    { name: 'Darder', position: 'MEI' },
+    { name: 'Dani Rodriguez', position: 'MEI' },
+    { name: 'Antonio Sanchez', position: 'MEI' },
+  ],
+  Levante: [
+    { name: 'Iborra', position: 'MEI' },
+    { name: 'Pablo Martinez', position: 'MEI' },
+    { name: 'Brugue', position: 'MEI' },
+  ],
+  'B. Leverkusen': [
+    { name: 'Wirtz', position: 'MEI' },
+    { name: 'Xhaka', position: 'MEI' },
+    { name: 'Palacios', position: 'MEI' },
+  ],
+  Bayern: [
+    { name: 'Musiala', position: 'MEI' },
+    { name: 'Kimmich', position: 'MEI' },
+    { name: 'Muller', position: 'MEI' },
+  ],
+  'B. Dortmund': [
+    { name: 'Brandt', position: 'MEI' },
+    { name: 'Reyna', position: 'MEI' },
+    { name: 'Nmecha', position: 'MEI' },
+  ],
+  'RB Leipzig': [
+    { name: 'Xavi Simons', position: 'MEI' },
+    { name: 'Forsberg', position: 'MEI' },
+    { name: 'Haidara', position: 'MEI' },
+  ],
+  Wolfsburg: [
+    { name: 'Majer', position: 'MEI' },
+    { name: 'Arnold', position: 'MEI' },
+    { name: 'Wimmer', position: 'MEI' },
+  ],
+  Eintracht: [
+    { name: 'Gotze', position: 'MEI' },
+    { name: 'Skhiri', position: 'MEI' },
+    { name: 'Knauff', position: 'MEI' },
+  ],
+  Augsburg: [
+    { name: 'Vargas', position: 'MEI' },
+    { name: 'Rexhbecaj', position: 'MEI' },
+    { name: 'Maier', position: 'MEI' },
+  ],
+  Hamburger: [
+    { name: 'Kittel', position: 'MEI' },
+    { name: 'Reis', position: 'MEI' },
+    { name: 'Königsdörffer', position: 'MEI' },
+  ],
+  Vitória: [
+    { name: 'Matheuzinho', position: 'MEI' },
+    { name: 'Wellington Rato', position: 'MEI' },
+    { name: 'Luan', position: 'MEI' },
+  ],
+  Sport: [
+    { name: 'Lucas Lima', position: 'MEI' },
+    { name: 'Fabinho', position: 'MEI' },
+    { name: 'Felipe', position: 'MEI' },
+  ],
+  Grêmio: [
+    { name: 'Cristaldo', position: 'MEI' },
+    { name: 'Villasanti', position: 'MEI' },
+    { name: 'Pepê', position: 'MEI' },
+  ],
+  Juventude: [
+    { name: 'Nenê', position: 'MEI' },
+    { name: 'Jadson', position: 'MEI' },
+    { name: 'Jean Carlos', position: 'MEI' },
+  ],
+}
+
+const calendarBasketballPointPlayersByTeam: Record<string, TeamPlayerProfile[]> = {
+  Jazz: [
+    { name: 'Lauri Markkanen', position: 'ALA' },
+    { name: 'Keyonte George', position: 'ARM' },
+    { name: 'Collin Sexton', position: 'ARM' },
+  ],
+  Thunder: [
+    { name: 'Shai Gilgeous-Alexander', position: 'ARM' },
+    { name: 'Jalen Williams', position: 'ALA' },
+    { name: 'Chet Holmgren', position: 'PIV' },
+  ],
+  Knicks: [
+    { name: 'Jalen Brunson', position: 'ARM' },
+    { name: 'Karl-Anthony Towns', position: 'PIV' },
+    { name: 'Mikal Bridges', position: 'ALA' },
+  ],
+  Magic: [
+    { name: 'Paolo Banchero', position: 'ALA' },
+    { name: 'Franz Wagner', position: 'ALA' },
+    { name: 'Jalen Suggs', position: 'ARM' },
+  ],
+  Bulls: [
+    { name: 'Coby White', position: 'ARM' },
+    { name: 'Josh Giddey', position: 'ARM' },
+    { name: 'Nikola Vucevic', position: 'PIV' },
+  ],
+  Heat: [
+    { name: 'Tyler Herro', position: 'ARM' },
+    { name: 'Bam Adebayo', position: 'PIV' },
+    { name: 'Jaime Jaquez Jr.', position: 'ALA' },
+  ],
+  '76ers': [
+    { name: 'Tyrese Maxey', position: 'ARM' },
+    { name: 'Joel Embiid', position: 'PIV' },
+    { name: 'Paul George', position: 'ALA' },
+  ],
+  Celtics: [
+    { name: 'Jayson Tatum', position: 'ALA' },
+    { name: 'Jaylen Brown', position: 'ALA' },
+    { name: 'Derrick White', position: 'ARM' },
+  ],
+  Nuggets: [
+    { name: 'Nikola Jokic', position: 'PIV' },
+    { name: 'Jamal Murray', position: 'ARM' },
+    { name: 'Michael Porter Jr.', position: 'ALA' },
+  ],
+  Suns: [
+    { name: 'Devin Booker', position: 'ARM' },
+    { name: 'Kevin Durant', position: 'ALA' },
+    { name: 'Bradley Beal', position: 'ARM' },
+  ],
+  Mavericks: [
+    { name: 'Kyrie Irving', position: 'ARM' },
+    { name: 'Anthony Davis', position: 'PIV' },
+    { name: 'Klay Thompson', position: 'ALA' },
+  ],
+  Spurs: [
+    { name: 'Victor Wembanyama', position: 'PIV' },
+    { name: 'DeAaron Fox', position: 'ARM' },
+    { name: 'Devin Vassell', position: 'ALA' },
+  ],
+  Clippers: [
+    { name: 'Kawhi Leonard', position: 'ALA' },
+    { name: 'James Harden', position: 'ARM' },
+    { name: 'Norman Powell', position: 'ALA' },
+  ],
+  Kings: [
+    { name: 'DeMar DeRozan', position: 'ALA' },
+    { name: 'Zach LaVine', position: 'ALA' },
+    { name: 'Domantas Sabonis', position: 'PIV' },
+  ],
+  'Southern Wesleyan': [
+    { name: 'Jacob Smith', position: 'ARM' },
+    { name: 'Marcus Brown', position: 'ALA' },
+    { name: 'Tyler Johnson', position: 'PIV' },
+  ],
+  'Kennesaw State': [
+    { name: 'Terrell Burden', position: 'ARM' },
+    { name: 'Demond Robinson', position: 'PIV' },
+    { name: 'Chris Youngblood', position: 'ALA' },
+  ],
+  Lafayette: [
+    { name: 'Devin Hines', position: 'ARM' },
+    { name: 'Kyle Jenkins', position: 'ALA' },
+    { name: 'Ryan Pettit', position: 'PIV' },
+  ],
+  Pennsylvania: [
+    { name: 'Clark Slajchert', position: 'ARM' },
+    { name: 'Nick Spinoso', position: 'PIV' },
+    { name: 'Sam Brown', position: 'ALA' },
+  ],
+  'South Carolina St.': [
+    { name: 'Mitchel Taylor', position: 'ARM' },
+    { name: 'Davion Everett', position: 'PIV' },
+    { name: 'Michael Teal', position: 'ALA' },
+  ],
+  Charleston: [
+    { name: 'Ante Brzovic', position: 'ALA' },
+    { name: 'CJ Fulton', position: 'ARM' },
+    { name: 'Kobe Rodgers', position: 'ALA' },
+  ],
+  Southern: [
+    { name: 'Brandon Davis', position: 'ARM' },
+    { name: 'Michael Jacobs', position: 'ALA' },
+    { name: 'Tyrone Lyons', position: 'ALA' },
+  ],
+  Texas: [
+    { name: 'Max Abmas', position: 'ARM' },
+    { name: 'Dylan Disu', position: 'ALA' },
+    { name: 'Tyrese Hunter', position: 'ARM' },
+  ],
+  Besiktas: [
+    { name: 'Derek Needham', position: 'ARM' },
+    { name: 'Matt Mitchell', position: 'ALA' },
+    { name: 'Jonah Mathews', position: 'ARM' },
+  ],
+  Lietkabelis: [
+    { name: 'Gediminas Orelik', position: 'ALA' },
+    { name: 'Vytenis Lipkevicius', position: 'ALA' },
+    { name: 'Kristupas Zemaitis', position: 'ARM' },
+  ],
+  'Chemnitz 99': [
+    { name: 'Aher Uguak', position: 'ALA' },
+    { name: 'Kaza Kajami-Keane', position: 'ARM' },
+    { name: 'Wes van Beck', position: 'ALA' },
+  ],
+  Panionios: [
+    { name: 'Kendrick Ray', position: 'ARM' },
+    { name: 'Giorgos Tsalmpouris', position: 'PIV' },
+    { name: 'Nikos Gikas', position: 'ARM' },
+  ],
+  'Hapoel Jerusalem': [
+    { name: 'Levi Randolph', position: 'ALA' },
+    { name: 'Khadeen Carrington', position: 'ARM' },
+    { name: 'Austin Wiley', position: 'PIV' },
+  ],
+  'Hamburg Towers': [
+    { name: 'Brae Ivey', position: 'ARM' },
+    { name: 'Jordan Barnett', position: 'ALA' },
+    { name: 'Nico Brauner', position: 'ARM' },
+  ],
+  Paulistano: [
+    { name: 'Deryk Ramos', position: 'ARM' },
+    { name: 'Eddy Carvalho', position: 'ALA' },
+    { name: 'Victao', position: 'PIV' },
+  ],
+  Unifacisa: [
+    { name: 'Trevor Gaskins', position: 'ARM' },
+    { name: 'Gerson', position: 'ALA' },
+    { name: 'Joao Vitor', position: 'PIV' },
+  ],
+  Botafogo: [
+    { name: 'Coelho', position: 'ARM' },
+    { name: 'Pastor', position: 'ALA' },
+    { name: 'Machado', position: 'ALA' },
+  ],
+  'Caxias do Sul': [
+    { name: 'Alexey', position: 'ARM' },
+    { name: 'Enzo', position: 'ALA' },
+    { name: 'Pedro', position: 'PIV' },
+  ],
+  Flamengo: [
+    { name: 'Yago Santos', position: 'ARM' },
+    { name: 'Gui Deodato', position: 'ALA' },
+    { name: 'Gabriel Jau', position: 'PIV' },
+  ],
+  Minas: [
+    { name: 'Elinho', position: 'ARM' },
+    { name: 'Shaq Johnson', position: 'ALA' },
+    { name: 'Renan Lenz', position: 'PIV' },
+  ],
+  'São Paulo': [
+    { name: 'Georginho', position: 'ARM' },
+    { name: 'Lucas Dias', position: 'ALA' },
+    { name: 'Malcolm Miller', position: 'ALA' },
+  ],
+  Pinheiros: [
+    { name: 'Ruivo', position: 'ARM' },
+    { name: 'Munford', position: 'ALA' },
+    { name: 'Dikembe', position: 'PIV' },
+  ],
+  Valencia: [
+    { name: 'Raquel Carrera', position: 'ALA' },
+    { name: 'Queralt Casas', position: 'ARM' },
+    { name: 'Leticia Romero', position: 'ARM' },
+  ],
+  'USK Praha': [
+    { name: 'Ezi Magbegor', position: 'PIV' },
+    { name: 'Teja Oblak', position: 'ARM' },
+    { name: 'Maria Conde', position: 'ALA' },
+  ],
+  Bourges: [
+    { name: 'Alix Duchet', position: 'ARM' },
+    { name: 'Pauline Astier', position: 'ARM' },
+    { name: 'Artemis Spanou', position: 'ALA' },
+  ],
+  'Lyon ASVEL': [
+    { name: 'Marine Johannes', position: 'ARM' },
+    { name: 'Gabby Williams', position: 'ALA' },
+    { name: 'Julie Allemand', position: 'ARM' },
+  ],
+  Fenerbahçe: [
+    { name: 'Emma Meesseman', position: 'PIV' },
+    { name: 'Satou Sabally', position: 'ALA' },
+    { name: 'Kayla McBride', position: 'ARM' },
+  ],
+  Sopron: [
+    { name: 'Yvonne Turner', position: 'ARM' },
+    { name: 'Jelena Brooks', position: 'ALA' },
+    { name: 'Brittney Sykes', position: 'ALA' },
+  ],
+  Schio: [
+    { name: 'Arella Guirantes', position: 'ARM' },
+    { name: 'Jasmine Keys', position: 'PIV' },
+    { name: 'Giorgia Sottana', position: 'ARM' },
+  ],
+  Girona: [
+    { name: 'Marianna Tolo', position: 'PIV' },
+    { name: 'Laura Pena', position: 'ARM' },
+    { name: 'Magali Mendy', position: 'ALA' },
+  ],
+}
+
+const calendarBasketballAssistPlayersByTeam: Record<string, TeamPlayerProfile[]> = {
+  Jazz: [
+    { name: 'Keyonte George', position: 'ARM' },
+    { name: 'Isaiah Collier', position: 'ARM' },
+    { name: 'Collin Sexton', position: 'ARM' },
+  ],
+  Thunder: [
+    { name: 'Shai Gilgeous-Alexander', position: 'ARM' },
+    { name: 'Jalen Williams', position: 'ALA' },
+    { name: 'Alex Caruso', position: 'ARM' },
+  ],
+  Knicks: [
+    { name: 'Jalen Brunson', position: 'ARM' },
+    { name: 'Josh Hart', position: 'ALA' },
+    { name: 'Miles McBride', position: 'ARM' },
+  ],
+  Magic: [
+    { name: 'Paolo Banchero', position: 'ALA' },
+    { name: 'Jalen Suggs', position: 'ARM' },
+    { name: 'Anthony Black', position: 'ARM' },
+  ],
+  Bulls: [
+    { name: 'Josh Giddey', position: 'ARM' },
+    { name: 'Coby White', position: 'ARM' },
+    { name: 'Ayo Dosunmu', position: 'ARM' },
+  ],
+  Heat: [
+    { name: 'Tyler Herro', position: 'ARM' },
+    { name: 'Bam Adebayo', position: 'PIV' },
+    { name: 'Terry Rozier', position: 'ARM' },
+  ],
+  Celtics: [
+    { name: 'Derrick White', position: 'ARM' },
+    { name: 'Jrue Holiday', position: 'ARM' },
+    { name: 'Jayson Tatum', position: 'ALA' },
+  ],
+  Nuggets: [
+    { name: 'Nikola Jokic', position: 'PIV' },
+    { name: 'Jamal Murray', position: 'ARM' },
+    { name: 'Aaron Gordon', position: 'ALA' },
+  ],
+  Suns: [
+    { name: 'Devin Booker', position: 'ARM' },
+    { name: 'Tyus Jones', position: 'ARM' },
+    { name: 'Bradley Beal', position: 'ARM' },
+  ],
+  Clippers: [
+    { name: 'James Harden', position: 'ARM' },
+    { name: 'Kawhi Leonard', position: 'ALA' },
+    { name: 'Kris Dunn', position: 'ARM' },
+  ],
+  Kings: [
+    { name: 'Domantas Sabonis', position: 'PIV' },
+    { name: 'Malik Monk', position: 'ARM' },
+    { name: 'DeMar DeRozan', position: 'ALA' },
+  ],
+  Mavericks: [
+    { name: 'Kyrie Irving', position: 'ARM' },
+    { name: 'Spencer Dinwiddie', position: 'ARM' },
+    { name: 'Anthony Davis', position: 'PIV' },
+  ],
+  Spurs: [
+    { name: 'DeAaron Fox', position: 'ARM' },
+    { name: 'Stephon Castle', position: 'ARM' },
+    { name: 'Victor Wembanyama', position: 'PIV' },
+  ],
+  Lafayette: [
+    { name: 'Devin Hines', position: 'ARM' },
+    { name: 'Kyle Jenkins', position: 'ALA' },
+    { name: 'Ryan Pettit', position: 'PIV' },
+  ],
+  Pennsylvania: [
+    { name: 'Clark Slajchert', position: 'ARM' },
+    { name: 'Nick Spinoso', position: 'PIV' },
+    { name: 'Sam Brown', position: 'ALA' },
+  ],
+  'South Carolina St.': [
+    { name: 'Mitchel Taylor', position: 'ARM' },
+    { name: 'Michael Teal', position: 'ALA' },
+    { name: 'Davion Everett', position: 'PIV' },
+  ],
+  Charleston: [
+    { name: 'CJ Fulton', position: 'ARM' },
+    { name: 'Ante Brzovic', position: 'ALA' },
+    { name: 'Kobe Rodgers', position: 'ALA' },
+  ],
+  Southern: [
+    { name: 'Brandon Davis', position: 'ARM' },
+    { name: 'Michael Jacobs', position: 'ALA' },
+    { name: 'Tyrone Lyons', position: 'ALA' },
+  ],
+  Texas: [
+    { name: 'Max Abmas', position: 'ARM' },
+    { name: 'Tyrese Hunter', position: 'ARM' },
+    { name: 'Dylan Disu', position: 'ALA' },
+  ],
+}
+
+const isCalendarFootballPlayerPropsMarket = (marketId: string) =>
+  marketId === CALENDAR_FOOTBALL_FINISHING_MARKET_ID ||
+  marketId === CALENDAR_FOOTBALL_ASSISTS_MARKET_ID
+
+const isCalendarBasketballPlayerPropsMarket = (marketId: string) =>
+  marketId === CALENDAR_BASKETBALL_POINTS_MARKET_ID ||
+  marketId === CALENDAR_BASKETBALL_ASSISTS_MARKET_ID
+
+const isCalendarPlayerPropsMarket = (sport: string, marketId: string) =>
+  sport === 'basquete'
+    ? isCalendarBasketballPlayerPropsMarket(marketId)
+    : sport === 'futebol' && isCalendarFootballPlayerPropsMarket(marketId)
+
+const getCalendarFootballPlayerProps = (
+  event: CompetitionEvent,
+  marketId: string,
+  homeIcon: string,
+  awayIcon: string
+): MatchPlayerProp[] => {
+  const optionSets = marketId === CALENDAR_FOOTBALL_ASSISTS_MARKET_ID
+    ? calendarFootballAssistOptionSets
+    : calendarFootballFinishingOptionSets
+  const playersByTeam = marketId === CALENDAR_FOOTBALL_ASSISTS_MARKET_ID
+    ? calendarFootballAssistPlayersByTeam
+    : calendarFootballFinishingPlayersByTeam
+  const homePlayers = playersByTeam[event.homeName] ?? []
+  const awayPlayers = playersByTeam[event.awayName] ?? []
+  const orderedPlayers = [
+    ...homePlayers.slice(0, 1).map((player) => ({ ...player, teamName: event.homeName, teamIcon: homeIcon, teamSide: 'home' as const })),
+    ...awayPlayers.slice(0, 1).map((player) => ({ ...player, teamName: event.awayName, teamIcon: awayIcon, teamSide: 'away' as const })),
+    ...homePlayers.slice(1, 2).map((player) => ({ ...player, teamName: event.homeName, teamIcon: homeIcon, teamSide: 'home' as const })),
+    ...awayPlayers.slice(1, 2).map((player) => ({ ...player, teamName: event.awayName, teamIcon: awayIcon, teamSide: 'away' as const })),
+    ...homePlayers.slice(2).map((player) => ({ ...player, teamName: event.homeName, teamIcon: homeIcon, teamSide: 'home' as const })),
+    ...awayPlayers.slice(2).map((player) => ({ ...player, teamName: event.awayName, teamIcon: awayIcon, teamSide: 'away' as const })),
+  ]
+  const uniquePlayerNames = new Set<string>()
+
+  return orderedPlayers.reduce<MatchPlayerProp[]>((players, player) => {
+    if (players.length >= CALENDAR_PLAYER_PROPS_PER_EVENT || uniquePlayerNames.has(player.name)) return players
+
+    uniquePlayerNames.add(player.name)
+    players.push({
+      id: `${event.id}-${marketId}-${player.teamName}-${player.name}`,
+      playerName: player.name,
+      teamName: player.teamName,
+      teamIcon: player.teamIcon,
+      teamSide: player.teamSide,
+      sport: 'futebol',
+      position: player.position,
+      image: playerAvatarFutebol,
+      options: optionSets[players.length % optionSets.length],
+    })
+    return players
+  }, [])
+}
+
+const getCalendarBasketballPlayerProps = (
+  event: CompetitionEvent,
+  marketId: string,
+  homeIcon: string,
+  awayIcon: string
+): MatchPlayerProp[] => {
+  const isAssistMarket = marketId === CALENDAR_BASKETBALL_ASSISTS_MARKET_ID
+  const optionSets = isAssistMarket
+    ? calendarBasketballAssistOptionSets
+    : calendarBasketballPointOptionSets
+  const homePlayers = (isAssistMarket
+    ? calendarBasketballAssistPlayersByTeam[event.homeName]
+    : calendarBasketballPointPlayersByTeam[event.homeName]) ?? calendarBasketballPointPlayersByTeam[event.homeName] ?? []
+  const awayPlayers = (isAssistMarket
+    ? calendarBasketballAssistPlayersByTeam[event.awayName]
+    : calendarBasketballPointPlayersByTeam[event.awayName]) ?? calendarBasketballPointPlayersByTeam[event.awayName] ?? []
+  const orderedPlayers = [
+    ...homePlayers.slice(0, 1).map((player) => ({ ...player, teamName: event.homeName, teamIcon: homeIcon, teamSide: 'home' as const })),
+    ...awayPlayers.slice(0, 1).map((player) => ({ ...player, teamName: event.awayName, teamIcon: awayIcon, teamSide: 'away' as const })),
+    ...homePlayers.slice(1, 2).map((player) => ({ ...player, teamName: event.homeName, teamIcon: homeIcon, teamSide: 'home' as const })),
+    ...awayPlayers.slice(1, 2).map((player) => ({ ...player, teamName: event.awayName, teamIcon: awayIcon, teamSide: 'away' as const })),
+    ...homePlayers.slice(2).map((player) => ({ ...player, teamName: event.homeName, teamIcon: homeIcon, teamSide: 'home' as const })),
+    ...awayPlayers.slice(2).map((player) => ({ ...player, teamName: event.awayName, teamIcon: awayIcon, teamSide: 'away' as const })),
+  ]
+  const uniquePlayerNames = new Set<string>()
+
+  return orderedPlayers.reduce<MatchPlayerProp[]>((players, player) => {
+    if (players.length >= CALENDAR_PLAYER_PROPS_PER_EVENT || uniquePlayerNames.has(player.name)) return players
+
+    uniquePlayerNames.add(player.name)
+    players.push({
+      id: `${event.id}-${marketId}-${player.teamName}-${player.name}`,
+      playerName: player.name,
+      teamName: player.teamName,
+      teamIcon: player.teamIcon,
+      teamSide: player.teamSide,
+      sport: 'basquete',
+      position: player.position,
+      image: playerAvatarBasquete,
+      options: optionSets[players.length % optionSets.length],
+    })
+    return players
+  }, [])
+}
+
+const getCalendarPlayerProps = (
+  event: CompetitionEvent,
+  sport: string,
+  marketId: string,
+  homeIcon: string,
+  awayIcon: string
+) =>
+  sport === 'basquete'
+    ? getCalendarBasketballPlayerProps(event, marketId, homeIcon, awayIcon)
+    : getCalendarFootballPlayerProps(event, marketId, homeIcon, awayIcon)
 
 function getCalendarSportFallbackIcon(sport: string): string {
   if (sport === 'basquete') return iconBasquete
@@ -1853,6 +2856,10 @@ export function CalendarSection({
       home: marketOdds.handicap.home,
       away: marketOdds.handicap.away,
     } : undefined)
+    const isPlayerPropsMarket = isCalendarPlayerPropsMarket(league.sport, selectedMarket)
+    const matchPlayerProps = isPlayerPropsMarket
+      ? getCalendarPlayerProps(event, league.sport, selectedMarket, homeIcon, awayIcon)
+      : []
 
     if (event.isLive) {
       return (
@@ -1895,7 +2902,7 @@ export function CalendarSection({
     return (
       <div
         key={event.id}
-        className={`prematch-section__match${liveEventSports.has(league.sport) ? ' prematch-section__match--clickable' : ''}`}
+        className={`prematch-section__match${liveEventSports.has(league.sport) ? ' prematch-section__match--clickable' : ''}${isPlayerPropsMarket ? ' prematch-section__match--player-props' : ''}`}
         onClick={liveEventSports.has(league.sport) ? () => openLiveEvent(league, event.id) : undefined}
       >
         <div className="prematch-section__match-header">
@@ -1933,7 +2940,19 @@ export function CalendarSection({
           </div>
         </div>
 
-        <div className="prematch-section__odds">
+        {isPlayerPropsMarket ? (
+          <div
+            key={`${event.id}-${selectedMarket}-player-props`}
+            className="prematch-section__player-props"
+            aria-label={`Jogadores de ${event.homeName} x ${event.awayName}`}
+            onClick={(clickEvent) => clickEvent.stopPropagation()}
+          >
+            {matchPlayerProps.map((player) => (
+              <PreMatchPlayerPropCard key={player.id} player={player} />
+            ))}
+          </div>
+        ) : (
+        <div key={`${event.id}-${selectedMarket}-odds`} className="prematch-section__odds">
           {selectedMarket === 'dupla-chance' ? (
             <>
               <button className="prematch-section__odd-btn">
@@ -2054,6 +3073,7 @@ export function CalendarSection({
             </>
           )}
         </div>
+        )}
       </div>
     )
   }

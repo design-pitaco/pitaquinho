@@ -21,7 +21,7 @@ const footballMarketChips = [
 ]
 
 const basketballMarketChips = [
-  { id: 'vencedor', label: 'Vencedor' },
+  { id: 'vencedor', label: 'Resultado Final' },
   { id: 'total-pontos', label: 'Total de Pontos' },
   { id: 'handicap', label: 'Handicap' },
 ]

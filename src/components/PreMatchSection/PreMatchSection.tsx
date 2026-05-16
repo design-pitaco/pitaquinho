@@ -256,9 +256,10 @@ const footballMarketChips: MarketChip[] = [
 ]
 
 const basketballMarketChips: MarketChip[] = [
-  { id: 'vencedor', label: 'Vencedor' },
+  { id: 'vencedor', label: 'Resultado Final' },
   { id: 'pontos-jogador', label: 'Pontos do Jogador' },
   { id: 'total-pontos', label: 'Total de Pontos' },
+  { id: 'assistencias', label: 'Assistências' },
   { id: 'handicap', label: 'Handicap' },
   { id: 'q3-total', label: '3° Quarto - Total de Pontos' },
   { id: 'q4-total', label: '4° Quarto - Total de Pontos' },
@@ -268,8 +269,11 @@ const PLAYER_PROPS_PER_MATCH = 3
 const FOOTBALL_PLAYER_PROPS_MARKET_ID = 'finalizacao-gol'
 const FOOTBALL_ASSISTS_MARKET_ID = 'assistencias'
 const BASKETBALL_PLAYER_PROPS_MARKET_ID = 'pontos-jogador'
+const BASKETBALL_ASSISTS_MARKET_ID = 'assistencias'
 const PLAYER_PROP_OPTION_MOUSE_SENSITIVITY = 1
 const PLAYER_PROP_OPTION_TOUCH_SENSITIVITY = 0.92
+const PLAYER_PROP_OPTION_INTENT_THRESHOLD = 8
+const PLAYER_PROP_OPTION_AXIS_RATIO = 1.15
 const PLAYER_PROP_OPTION_SWIPE_THRESHOLD = 12
 const PLAYER_PROP_OPTION_PROGRAMMATIC_MS = 220
 
@@ -292,6 +296,12 @@ const basketballPlayerPropOptionSets = [
   playerPropOptions([['15.5+', '1.62x'], ['20.5+', '1.95x'], ['25.5+', '3.05x']]),
   playerPropOptions([['12.5+', '1.58x'], ['17.5+', '1.88x'], ['22.5+', '2.80x']]),
   playerPropOptions([['8.5+', '1.54x'], ['13.5+', '1.82x'], ['18.5+', '2.60x']]),
+]
+
+const basketballAssistPropOptionSets = [
+  playerPropOptions([['1.0+', '1.70x'], ['2.0+', '2.15x'], ['3.0+', '3.40x']]),
+  playerPropOptions([['1.0+', '1.62x'], ['2.0+', '1.95x'], ['3.0+', '2.90x']]),
+  playerPropOptions([['1.0+', '1.54x'], ['2.0+', '1.82x'], ['3.0+', '2.55x']]),
 ]
 
 const footballPlayersByTeam: Record<string, TeamPlayerProfile[]> = {
@@ -1037,22 +1047,27 @@ const basketballPlayersByTeam: Record<string, TeamPlayerProfile[]> = {
   ],
 }
 
-const isPlayerPropsMarket = (marketId: string) =>
-  marketId === FOOTBALL_PLAYER_PROPS_MARKET_ID ||
-  marketId === FOOTBALL_ASSISTS_MARKET_ID ||
-  marketId === BASKETBALL_PLAYER_PROPS_MARKET_ID
+const isPlayerPropsMarket = (sport: string, marketId: string) =>
+  sport === 'basquete'
+    ? marketId === BASKETBALL_PLAYER_PROPS_MARKET_ID || marketId === BASKETBALL_ASSISTS_MARKET_ID
+    : marketId === FOOTBALL_PLAYER_PROPS_MARKET_ID || marketId === FOOTBALL_ASSISTS_MARKET_ID
 
 const getPlayerPropAvatar = (sport: string) =>
   sport === 'basquete' ? playerAvatarBasquete : playerAvatarFutebol
 
 const getPlayerPropOptionSets = (sport: string, marketId: string) => {
-  if (marketId === FOOTBALL_ASSISTS_MARKET_ID) return footballAssistPropOptionSets
-  return sport === 'basquete' ? basketballPlayerPropOptionSets : footballPlayerPropOptionSets
+  if (sport === 'basquete') {
+    return marketId === BASKETBALL_ASSISTS_MARKET_ID
+      ? basketballAssistPropOptionSets
+      : basketballPlayerPropOptionSets
+  }
+  return marketId === FOOTBALL_ASSISTS_MARKET_ID ? footballAssistPropOptionSets : footballPlayerPropOptionSets
 }
 
 const getTeamPlayerProfiles = (teamName: string, sport: string, marketId: string) => {
+  if (sport === 'basquete') return basketballPlayersByTeam[teamName] ?? []
   if (marketId === FOOTBALL_ASSISTS_MARKET_ID) return footballAssistPlayersByTeam[teamName] ?? []
-  return sport === 'basquete' ? basketballPlayersByTeam[teamName] ?? [] : footballFinishingPlayersByTeam[teamName] ?? []
+  return footballFinishingPlayersByTeam[teamName] ?? []
 }
 
 const getMatchPlayerProps = (
@@ -1117,6 +1132,8 @@ export function PreMatchPlayerPropCard({ player }: { player: MatchPlayerProp }) 
     scrollLeft: number
     startIndex: number
     moved: boolean
+    direction: 'pending' | 'horizontal' | 'vertical'
+    lastY: number
     pointerId?: number
     sensitivity: number
   } | null>(null)
@@ -1270,6 +1287,33 @@ export function PreMatchPlayerPropCard({ player }: { player: MatchPlayerProp }) 
     centerOption(targetIndex)
   }
 
+  const getVerticalScrollContainer = (element: HTMLElement | null) => {
+    let currentElement = element?.parentElement ?? null
+
+    while (currentElement && currentElement !== document.body) {
+      const style = window.getComputedStyle(currentElement)
+      const canScrollY = /(auto|scroll)/.test(style.overflowY)
+
+      if (canScrollY && currentElement.scrollHeight > currentElement.clientHeight) {
+        return currentElement
+      }
+
+      currentElement = currentElement.parentElement
+    }
+
+    return (document.scrollingElement ?? document.documentElement) as HTMLElement
+  }
+
+  const applyVerticalPointerScroll = (event: PointerEvent<HTMLDivElement>) => {
+    const drag = optionDrag.current
+    const containerEl = optionsScrollRef.current
+    if (!drag || !containerEl) return
+
+    const verticalScrollEl = getVerticalScrollContainer(containerEl)
+    verticalScrollEl.scrollTop += drag.lastY - event.clientY
+    drag.lastY = event.clientY
+  }
+
   const handleOptionPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return
 
@@ -1279,14 +1323,20 @@ export function PreMatchPlayerPropCard({ player }: { player: MatchPlayerProp }) 
     event.stopPropagation()
     containerEl.setPointerCapture?.(event.pointerId)
     clearProgrammaticOptionTarget()
-    setPlayerPropsScrollLocked(true)
-    setIsDraggingOptions(true)
+    if (event.pointerType === 'mouse') {
+      setPlayerPropsScrollLocked(true)
+      setIsDraggingOptions(true)
+      containerEl.classList.add('prematch-section__player-prop-options-scroll--dragging')
+    }
+
     optionDrag.current = {
       startX: event.clientX,
       startY: event.clientY,
       scrollLeft: containerEl.scrollLeft,
       startIndex: activeOptionIndexRef.current ?? getCenteredOptionIndex(),
       moved: false,
+      direction: event.pointerType === 'mouse' ? 'horizontal' : 'pending',
+      lastY: event.clientY,
       pointerId: event.pointerId,
       sensitivity: event.pointerType === 'touch'
         ? PLAYER_PROP_OPTION_TOUCH_SENSITIVITY
@@ -1299,21 +1349,79 @@ export function PreMatchPlayerPropCard({ player }: { player: MatchPlayerProp }) 
     const containerEl = optionsScrollRef.current
     if (!drag || !containerEl) return
 
+    const deltaX = event.clientX - drag.startX
+    const deltaY = event.clientY - (drag.startY ?? event.clientY)
+    const absX = Math.abs(deltaX)
+    const absY = Math.abs(deltaY)
+
+    if (drag.direction === 'pending') {
+      if (
+        absY >= PLAYER_PROP_OPTION_INTENT_THRESHOLD &&
+        absY > absX * PLAYER_PROP_OPTION_AXIS_RATIO
+      ) {
+        drag.direction = 'vertical'
+        setIsDraggingOptions(false)
+        releasePlayerPropsScrollLock()
+        applyVerticalPointerScroll(event)
+        return
+      }
+
+      if (
+        absX < PLAYER_PROP_OPTION_INTENT_THRESHOLD ||
+        absX <= absY * PLAYER_PROP_OPTION_AXIS_RATIO
+      ) {
+        return
+      }
+
+      drag.direction = 'horizontal'
+      setPlayerPropsScrollLocked(true)
+      setIsDraggingOptions(true)
+      containerEl.classList.add('prematch-section__player-prop-options-scroll--dragging')
+    }
+
     event.stopPropagation()
+
     if (event.cancelable) {
       event.preventDefault()
     }
 
-    const walk = (event.clientX - drag.startX) * drag.sensitivity
+    if (drag.direction === 'vertical') {
+      applyVerticalPointerScroll(event)
+      return
+    }
+
+    if (drag.direction !== 'horizontal') return
+
+
+    const walk = deltaX * drag.sensitivity
     drag.moved = drag.moved || Math.abs(walk) > 4
     containerEl.scrollLeft = drag.scrollLeft - walk
     clampOptionScroll()
+  }
+
+  const clearOptionDrag = () => {
+    const drag = optionDrag.current
+    const containerEl = optionsScrollRef.current
+
+    if (containerEl && drag?.pointerId !== undefined && containerEl.hasPointerCapture?.(drag.pointerId)) {
+      containerEl.releasePointerCapture(drag.pointerId)
+    }
+
+    optionDrag.current = null
+    setIsDraggingOptions(false)
+    containerEl?.classList.remove('prematch-section__player-prop-options-scroll--dragging')
+    releasePlayerPropsScrollLock()
   }
 
   const finishOptionDrag = (releaseDelay = 0) => {
     const drag = optionDrag.current
     const containerEl = optionsScrollRef.current
     if (!drag) return
+
+    if (drag.direction !== 'horizontal') {
+      clearOptionDrag()
+      return
+    }
 
     const dragDelta = containerEl ? containerEl.scrollLeft - drag.scrollLeft : 0
 
@@ -1323,6 +1431,7 @@ export function PreMatchPlayerPropCard({ player }: { player: MatchPlayerProp }) 
 
     optionDrag.current = null
     setIsDraggingOptions(false)
+    containerEl?.classList.remove('prematch-section__player-prop-options-scroll--dragging')
     releasePlayerPropsScrollLock(releaseDelay)
 
     if (drag.moved) {
@@ -1337,12 +1446,17 @@ export function PreMatchPlayerPropCard({ player }: { player: MatchPlayerProp }) 
 
   const handleOptionPointerUp = (event: PointerEvent<HTMLDivElement>) => {
     event.stopPropagation()
-    finishOptionDrag(140)
+    if (optionDrag.current?.direction === 'horizontal') {
+      finishOptionDrag(140)
+      return
+    }
+
+    clearOptionDrag()
   }
 
   const handleOptionPointerCancel = (event: PointerEvent<HTMLDivElement>) => {
     event.stopPropagation()
-    finishOptionDrag(140)
+    clearOptionDrag()
   }
 
   const handleOptionWheel = (event: WheelEvent<HTMLDivElement>) => {
@@ -2151,7 +2265,7 @@ export function PreMatchSection({ onOpenCompetition, onMatchClick }: PreMatchSec
                 <div className="prematch-section__matches-inner">
                   <div className="prematch-section__matches">
                     {league.matches.map((match, matchIndex) => {
-                      const matchPlayerProps = isPlayerPropsMarket(activeMarket)
+                      const matchPlayerProps = isPlayerPropsMarket(league.sport, activeMarket)
                         ? getMatchPlayerProps(match, league.sport, activeMarket)
                         : []
 
@@ -2159,7 +2273,7 @@ export function PreMatchSection({ onOpenCompetition, onMatchClick }: PreMatchSec
                       <div
                         key={match.id}
                         data-prematch-match-key={`${league.id}:${match.id}`}
-                        className={`prematch-section__match${onMatchClick ? ' prematch-section__match--clickable' : ''}${isPlayerPropsMarket(activeMarket) ? ' prematch-section__match--player-props' : ''}`}
+                        className={`prematch-section__match${onMatchClick ? ' prematch-section__match--clickable' : ''}${isPlayerPropsMarket(league.sport, activeMarket) ? ' prematch-section__match--player-props' : ''}`}
                         onClick={onMatchClick ? () => openPreMatchEvent(league, matchIndex) : undefined}
                       >
                         {/* Match Header */}
@@ -2185,7 +2299,7 @@ export function PreMatchSection({ onOpenCompetition, onMatchClick }: PreMatchSec
                             </div>
                           </div>
                           <div className="prematch-section__match-info">
-                            {match.extraBets && (activeMarket === 'resultado-final' || activeMarket === 'vencedor' || isPlayerPropsMarket(activeMarket)) ? (
+                            {match.extraBets && (activeMarket === 'resultado-final' || activeMarket === 'vencedor' || isPlayerPropsMarket(league.sport, activeMarket)) ? (
                               <button 
                                 type="button"
                                 className="prematch-section__match-info-content prematch-section__match-info-content--clickable"
@@ -2211,7 +2325,7 @@ export function PreMatchSection({ onOpenCompetition, onMatchClick }: PreMatchSec
                         </div>
 
                         {/* Odds */}
-                        {isPlayerPropsMarket(activeMarket) ? (
+                        {isPlayerPropsMarket(league.sport, activeMarket) ? (
                           <div
                             key={`${match.id}-${activeMarket}-player-props`}
                             className="prematch-section__player-props"

@@ -7,6 +7,19 @@ import iconTenis from '../../assets/iconSports/tennis.png'
 import { getTennisPlayerCountryIcon } from '../../data/tennisCountryIcons'
 import { useSportsDbTeamLogo } from '../../hooks/useSportsDbTeamLogo'
 import playerAvatarFutebol from '../../assets/playerAvatarFutebol.svg'
+import playerAvatarBasquete from '../../assets/playerAvatarBasquete.svg'
+import arrascaetaProps from '../../assets/arrascaetaProps.png'
+import pedroProps from '../../assets/pedroProps.png'
+import depayProps from '../../assets/depayProps.png'
+import yuriProps from '../../assets/yuriProps.png'
+import flacoLopezProps from '../../assets/flacoLopezProps.png'
+import playerRaphinha from '../../assets/playerRaphinha.png'
+import playerLewa from '../../assets/playerLewa.png'
+import playerYamal from '../../assets/playerYamal.png'
+import playerJimmyButler from '../../assets/playerJimmyButler.png'
+import playerLeBronJames from '../../assets/playerLeBronJames.png'
+import playerLukaDoncic from '../../assets/playerLukaDoncic.png'
+import playerStephenCurry from '../../assets/playerStephenCurry.png'
 import {
   PreMatchPlayerPropCard,
   type MatchPlayerProp,
@@ -82,6 +95,8 @@ interface LiveMatchCardProps {
 const LIVE_PLAYER_PROPS_PER_MATCH = 3
 const LIVE_FOOTBALL_FINISHING_MARKET_ID = 'finalizacao-gol'
 const LIVE_FOOTBALL_ASSISTS_MARKET_ID = 'assistencias'
+const LIVE_BASKETBALL_PLAYER_POINTS_MARKET_ID = 'pontos-jogador'
+const LIVE_BASKETBALL_PLAYER_ASSISTS_MARKET_ID = 'assistencias'
 
 const livePlayerPropOptions = (values: Array<[string, string]>): PlayerPropOption[] =>
   values.map(([label, odd], index) => ({ label, odd, active: index === 1 }))
@@ -97,6 +112,51 @@ const liveFootballAssistOptionSets = [
   livePlayerPropOptions([['1.0+', '1.74x'], ['2.0+', '2.50x'], ['3.0+', '4.60x']]),
   livePlayerPropOptions([['1.0+', '1.82x'], ['2.0+', '2.70x'], ['3.0+', '5.10x']]),
 ]
+
+const liveBasketballPlayerPointOptionSets = [
+  livePlayerPropOptions([['15.5+', '1.62x'], ['20.5+', '1.95x'], ['25.5+', '3.05x']]),
+  livePlayerPropOptions([['12.5+', '1.58x'], ['17.5+', '1.88x'], ['22.5+', '2.80x']]),
+  livePlayerPropOptions([['8.5+', '1.54x'], ['13.5+', '1.82x'], ['18.5+', '2.60x']]),
+]
+
+const liveBasketballPlayerAssistOptionSets = [
+  livePlayerPropOptions([['1.0+', '1.70x'], ['2.0+', '2.15x'], ['3.0+', '3.40x']]),
+  livePlayerPropOptions([['1.0+', '1.62x'], ['2.0+', '1.95x'], ['3.0+', '2.90x']]),
+  livePlayerPropOptions([['1.0+', '1.54x'], ['2.0+', '1.82x'], ['3.0+', '2.55x']]),
+]
+
+const normalizeLivePlayerImageKey = (playerName: string) =>
+  playerName
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+
+const livePlayerImagesByName: Record<string, string> = {
+  arrascaeta: arrascaetaProps,
+  'giorgian-de-arrascaeta': arrascaetaProps,
+  pedro: pedroProps,
+  'memphis-depay': depayProps,
+  depay: depayProps,
+  'yuri-alberto': yuriProps,
+  'flaco-lopez': flacoLopezProps,
+  raphinha: playerRaphinha,
+  lewandowski: playerLewa,
+  'r-lewandowski': playerLewa,
+  'robert-lewandowski': playerLewa,
+  yamal: playerYamal,
+  'l-yamal': playerYamal,
+  'lamine-yamal': playerYamal,
+  'jimmy-butler': playerJimmyButler,
+  'lebron-james': playerLeBronJames,
+  'luka-doncic': playerLukaDoncic,
+  'stephen-curry': playerStephenCurry,
+}
+
+const getLivePlayerImage = (playerName: string, sport: string) =>
+  livePlayerImagesByName[normalizeLivePlayerImageKey(playerName)] ??
+  (sport === 'basquete' ? playerAvatarBasquete : playerAvatarFutebol)
 
 const liveFootballFinishingPlayersByTeam: Record<string, TeamPlayerProfile[]> = {
   Flamengo: [
@@ -158,6 +218,36 @@ const liveFootballFinishingPlayersByTeam: Record<string, TeamPlayerProfile[]> = 
     { name: 'Osimhen', position: 'ATA' },
     { name: 'Politano', position: 'ATA' },
     { name: 'Raspadori', position: 'ATA' },
+  ],
+  Arsenal: [
+    { name: 'Saka', position: 'ATA' },
+    { name: 'Havertz', position: 'MEI' },
+    { name: 'Martinelli', position: 'ATA' },
+  ],
+  Chelsea: [
+    { name: 'Palmer', position: 'MEI' },
+    { name: 'Jackson', position: 'ATA' },
+    { name: 'Nkunku', position: 'ATA' },
+  ],
+  Getafe: [
+    { name: 'Mayoral', position: 'ATA' },
+    { name: 'Greenwood', position: 'ATA' },
+    { name: 'Latasa', position: 'ATA' },
+  ],
+  Elche: [
+    { name: 'Boye', position: 'ATA' },
+    { name: 'Pere Milla', position: 'ATA' },
+    { name: 'Mojica', position: 'LAT' },
+  ],
+  'B. Leverkusen': [
+    { name: 'Wirtz', position: 'MEI' },
+    { name: 'Boniface', position: 'ATA' },
+    { name: 'Grimaldo', position: 'LAT' },
+  ],
+  Bayern: [
+    { name: 'Harry Kane', position: 'ATA' },
+    { name: 'Musiala', position: 'MEI' },
+    { name: 'Sane', position: 'ATA' },
   ],
   'Boca Juniors': [
     { name: 'Cavani', position: 'ATA' },
@@ -312,6 +402,36 @@ const liveFootballAssistPlayersByTeam: Record<string, TeamPlayerProfile[]> = {
     { name: 'Lobotka', position: 'MEI' },
     { name: 'Zielinski', position: 'MEI' },
   ],
+  Arsenal: [
+    { name: 'Odegaard', position: 'MEI' },
+    { name: 'Rice', position: 'MEI' },
+    { name: 'Havertz', position: 'MEI' },
+  ],
+  Chelsea: [
+    { name: 'Palmer', position: 'MEI' },
+    { name: 'Enzo Fernandez', position: 'MEI' },
+    { name: 'Caicedo', position: 'MEI' },
+  ],
+  Getafe: [
+    { name: 'Maksimovic', position: 'MEI' },
+    { name: 'Alena', position: 'MEI' },
+    { name: 'Milla', position: 'MEI' },
+  ],
+  Elche: [
+    { name: 'Fidel', position: 'MEI' },
+    { name: 'Febas', position: 'MEI' },
+    { name: 'Josan', position: 'MEI' },
+  ],
+  'B. Leverkusen': [
+    { name: 'Wirtz', position: 'MEI' },
+    { name: 'Xhaka', position: 'MEI' },
+    { name: 'Palacios', position: 'MEI' },
+  ],
+  Bayern: [
+    { name: 'Musiala', position: 'MEI' },
+    { name: 'Kimmich', position: 'MEI' },
+    { name: 'Muller', position: 'MEI' },
+  ],
   'Boca Juniors': [
     { name: 'Zenon', position: 'MEI' },
     { name: 'Pol Fernandez', position: 'MEI' },
@@ -404,16 +524,101 @@ const liveFootballAssistPlayersByTeam: Record<string, TeamPlayerProfile[]> = {
   ],
 }
 
-const isLivePlayerPropsMarket = (marketId: string) =>
-  marketId === LIVE_FOOTBALL_FINISHING_MARKET_ID || marketId === LIVE_FOOTBALL_ASSISTS_MARKET_ID
+const liveBasketballPointPlayersByTeam: Record<string, TeamPlayerProfile[]> = {
+  Jazz: [
+    { name: 'Lauri Markkanen', position: 'ALA' },
+    { name: 'Keyonte George', position: 'ARM' },
+    { name: 'Collin Sexton', position: 'ARM' },
+  ],
+  Thunder: [
+    { name: 'Shai Gilgeous-Alexander', position: 'ARM' },
+    { name: 'Jalen Williams', position: 'ALA' },
+    { name: 'Chet Holmgren', position: 'PIV' },
+  ],
+  Knicks: [
+    { name: 'Jalen Brunson', position: 'ARM' },
+    { name: 'Karl-Anthony Towns', position: 'PIV' },
+    { name: 'Mikal Bridges', position: 'ALA' },
+  ],
+  Magic: [
+    { name: 'Paolo Banchero', position: 'ALA' },
+    { name: 'Franz Wagner', position: 'ALA' },
+    { name: 'Jalen Suggs', position: 'ARM' },
+  ],
+  'AEPS Machitis': [
+    { name: 'Nikos Kalaitzis', position: 'ARM' },
+    { name: 'Petros Liapis', position: 'ALA' },
+    { name: 'Giorgos Pavlidis', position: 'PIV' },
+  ],
+  'ASA Koroivos': [
+    { name: 'Dimitris Stamatis', position: 'ARM' },
+    { name: 'Vasilis Mouratos', position: 'ARM' },
+    { name: 'Kostas Iatridis', position: 'ALA' },
+  ],
+  'Southern Wesleyan': [
+    { name: 'Jacob Smith', position: 'ARM' },
+    { name: 'Marcus Brown', position: 'ALA' },
+    { name: 'Tyler Johnson', position: 'PIV' },
+  ],
+  'Kennesaw State': [
+    { name: 'Terrell Burden', position: 'ARM' },
+    { name: 'Demond Robinson', position: 'PIV' },
+    { name: 'Chris Youngblood', position: 'ALA' },
+  ],
+  'Vanoli Cremona': [
+    { name: 'Andrea Pecchia', position: 'ALA' },
+    { name: 'Trevor Lacey', position: 'ARM' },
+    { name: 'Paul Eboua', position: 'PIV' },
+  ],
+  Varese: [
+    { name: 'Nico Mannion', position: 'ARM' },
+    { name: 'Gabe Brown', position: 'ALA' },
+    { name: 'Davide Alviti', position: 'ALA' },
+  ],
+  'Virtus Bologna': [
+    { name: 'Tornike Shengelia', position: 'ALA' },
+    { name: 'Marco Belinelli', position: 'ARM' },
+    { name: 'Daniel Hackett', position: 'ARM' },
+  ],
+  Tortona: [
+    { name: 'Tommaso Baldasso', position: 'ARM' },
+    { name: 'Kyle Weems', position: 'ALA' },
+    { name: 'Ismael Kamagate', position: 'PIV' },
+  ],
+  Beroe: [
+    { name: 'Darius Hall', position: 'ALA' },
+    { name: 'Aleksandar Yanev', position: 'ALA' },
+    { name: 'Ivan Lilov', position: 'ARM' },
+  ],
+  'Balkan Botevgrad': [
+    { name: 'Dimitar Dimitrov', position: 'ALA' },
+    { name: 'Manny Suarez', position: 'PIV' },
+    { name: 'Nikolay Grozev', position: 'ARM' },
+  ],
+}
 
-const getLiveFootballPlayerProps = (match: LiveMatchCardMatch, marketId: string): MatchPlayerProp[] => {
-  const optionSets = marketId === LIVE_FOOTBALL_ASSISTS_MARKET_ID
-    ? liveFootballAssistOptionSets
-    : liveFootballFinishingOptionSets
-  const playersByTeam = marketId === LIVE_FOOTBALL_ASSISTS_MARKET_ID
-    ? liveFootballAssistPlayersByTeam
-    : liveFootballFinishingPlayersByTeam
+const isLivePlayerPropsMarket = (sport: string, marketId: string) =>
+  sport === 'basquete'
+    ? marketId === LIVE_BASKETBALL_PLAYER_POINTS_MARKET_ID ||
+      marketId === LIVE_BASKETBALL_PLAYER_ASSISTS_MARKET_ID
+    : sport === 'futebol' && (
+      marketId === LIVE_FOOTBALL_FINISHING_MARKET_ID ||
+      marketId === LIVE_FOOTBALL_ASSISTS_MARKET_ID
+    )
+
+const getLivePlayerProps = (match: LiveMatchCardMatch, sport: string, marketId: string): MatchPlayerProp[] => {
+  const optionSets = sport === 'basquete'
+    ? marketId === LIVE_BASKETBALL_PLAYER_ASSISTS_MARKET_ID
+      ? liveBasketballPlayerAssistOptionSets
+      : liveBasketballPlayerPointOptionSets
+    : marketId === LIVE_FOOTBALL_ASSISTS_MARKET_ID
+      ? liveFootballAssistOptionSets
+      : liveFootballFinishingOptionSets
+  const playersByTeam = sport === 'basquete'
+    ? liveBasketballPointPlayersByTeam
+    : marketId === LIVE_FOOTBALL_ASSISTS_MARKET_ID
+      ? liveFootballAssistPlayersByTeam
+      : liveFootballFinishingPlayersByTeam
   const homePlayers = playersByTeam[match.homeTeam.name] ?? []
   const awayPlayers = playersByTeam[match.awayTeam.name] ?? []
   const orderedPlayers = [
@@ -436,9 +641,9 @@ const getLiveFootballPlayerProps = (match: LiveMatchCardMatch, marketId: string)
       teamName: player.teamName,
       teamIcon: player.teamIcon,
       teamSide: player.teamSide,
-      sport: 'futebol',
+      sport,
       position: player.position,
-      image: playerAvatarFutebol,
+      image: getLivePlayerImage(player.name, sport),
       options: optionSets[players.length % optionSets.length],
     })
     return players
@@ -448,8 +653,8 @@ const getLiveFootballPlayerProps = (match: LiveMatchCardMatch, marketId: string)
 export function LiveMatchCard({ match, sport, activeMarket, currentTime, onClick }: LiveMatchCardProps) {
   const isBasketball = sport === 'basquete'
   const isTennis = sport === 'tenis'
-  const isPlayerProps = sport === 'futebol' && isLivePlayerPropsMarket(activeMarket)
-  const matchPlayerProps = isPlayerProps ? getLiveFootballPlayerProps(match, activeMarket) : []
+  const isPlayerProps = isLivePlayerPropsMarket(sport, activeMarket)
+  const matchPlayerProps = isPlayerProps ? getLivePlayerProps(match, sport, activeMarket) : []
   const sportFallbackIcon = isBasketball ? iconBasquete : isTennis ? iconTenis : iconFutebol
   const homeCurrentIcon = isTennis
     ? getTennisPlayerCountryIcon(match.homeTeam.name, match.homeTeam.icon)

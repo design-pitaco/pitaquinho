@@ -1,8 +1,9 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type UIEvent, type WheelEvent } from 'react'
 import { createPortal, flushSync } from 'react-dom'
-import { CaretRightIcon, ChartBarIcon, CourtBasketballIcon, MonitorPlayIcon, SoccerBallIcon } from '@phosphor-icons/react'
+import { CaretRightIcon, CourtBasketballIcon, MonitorPlayIcon, SoccerBallIcon } from '@phosphor-icons/react'
 import './LiveEventPage.css'
 
+import { PreMatchPlayerPropCard, type MatchPlayerProp } from '../../components/PreMatchSection/PreMatchSection'
 import iconAoVivo from '../../assets/iconAoVivo.png'
 import reiAntecipaFutebol from '../../assets/reiAntecipaFutebol.png'
 import reiAntecipaBasquete from '../../assets/reiAntecipaBasquete.png'
@@ -13,8 +14,8 @@ import streamingBasquete from '../../assets/streamingBasquete.png'
 import iconBasquete from '../../assets/iconSports/basketball.png'
 import iconFutebol from '../../assets/iconSports/soccer.png'
 import escudoDefaultBasquete from '../../assets/escudoDefaultBasquete.png'
-import avatarFutebol from '../../assets/avatarFutebol.png'
-import avatarBasquete from '../../assets/avatarBasquete.png'
+import playerAvatarFutebol from '../../assets/playerAvatarFutebol.svg'
+import playerAvatarBasquete from '../../assets/playerAvatarBasquete.svg'
 import arrascaetaProps from '../../assets/arrascaetaProps.png'
 import pedroProps from '../../assets/pedroProps.png'
 import depayProps from '../../assets/depayProps.png'
@@ -658,6 +659,26 @@ function getPlayerPropRows(match: LiveEventMatch, isBasketball: boolean, isExpan
   return isBasketball
     ? getBasketballPlayerPointRows(match, isExpanded)
     : getShotsOnGoalRows(match, isExpanded)
+}
+
+const liveEventMidfieldPlayerNames = new Set([
+  'arrascaeta',
+  'de-la-cruz',
+  'matheus-pereira',
+  'payet',
+  'alan-patrick',
+  'jhon-jhon',
+  'raphael-veiga',
+  'arias',
+  'savarino',
+  'musiala',
+  'dembele',
+  'raphinha',
+])
+
+function getPlayerPropCardPosition(playerName: string, isBasketball: boolean): string {
+  if (isBasketball) return 'PTS'
+  return liveEventMidfieldPlayerNames.has(normalizePlayerName(playerName)) ? 'MEI' : 'ATA'
 }
 
 function getTotalGoalsRows(match: LiveEventMatch, isExpanded: boolean): TotalGoalsMarketRow[] {
@@ -1306,14 +1327,12 @@ function LiveEventContent({
 }: LiveEventContentProps) {
   const [activeTab, setActiveTab] = useState<TabId>('transmissao')
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTabId>('destaques')
-  const [scrolledOddsRows, setScrolledOddsRows] = useState<Record<string, boolean>>({})
   const [isResultMarketOpen, setIsResultMarketOpen] = useState(true)
   const [isShotsMarketOpen, setIsShotsMarketOpen] = useState(true)
   const [isTotalGoalsMarketOpen, setIsTotalGoalsMarketOpen] = useState(true)
   const [isCornersMarketOpen, setIsCornersMarketOpen] = useState(true)
   const [isCardsMarketOpen, setIsCardsMarketOpen] = useState(true)
   const [isDoubleChanceMarketOpen, setIsDoubleChanceMarketOpen] = useState(true)
-  const [isShotsExpanded, setIsShotsExpanded] = useState(false)
   const [displayTime, setDisplayTime] = useState(currentTime)
   const [isStickyScoreHeaderVisible, setIsStickyScoreHeaderVisible] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -1351,7 +1370,7 @@ function LiveEventContent({
   const scheduledDateTime = match.dateTime ?? match.time ?? currentTime
   const liveStreamImage = isBasketball ? streamingBasquete : streamingFutebol
   const eventBallIcon = isBasketball ? iconBasquete : iconFutebol
-  const playerAvatarFallback = isBasketball ? avatarBasquete : avatarFutebol
+  const playerAvatarFallback = isBasketball ? playerAvatarBasquete : playerAvatarFutebol
   const earlyPayoutImage = isBasketball ? reiAntecipaBasquete : reiAntecipaFutebol
   const resultMarketTitle = isBasketball ? 'Vencedor - Pagamento Antecipado' : 'Resultado final - Pagamento Antecipado'
   const fieldTabLabel = isBasketball ? 'Quadra' : 'Campo'
@@ -1362,8 +1381,25 @@ function LiveEventContent({
   const tertiaryMarketTitle = isBasketball ? '3° Quarto - Total de Pontos' : 'Total de Cartões'
   const finalMarketTitle = isBasketball ? '4° Quarto - Total de Pontos' : 'Dupla Chance'
   const allPlayerPropRows = getPlayerPropRows(match, isBasketball, true)
-  const primaryPlayerPropRows = allPlayerPropRows.slice(0, 4)
-  const extraPlayerPropRows = allPlayerPropRows.slice(4, 8)
+  const playerPropCards: MatchPlayerProp[] = allPlayerPropRows.map((row) => {
+    const teamSide = row.team === match.awayTeam.name ? 'away' : 'home'
+
+    return {
+      id: `${match.id ?? 'live-event'}-${row.id}`,
+      playerName: row.player,
+      teamName: row.team,
+      teamIcon: teamSide === 'away' ? match.awayTeam.icon : match.homeTeam.icon,
+      teamSide,
+      sport: contentSport,
+      position: getPlayerPropCardPosition(row.player, isBasketball),
+      image: row.image ?? playerAvatarFallback,
+      options: row.outcomes.map((outcome, outcomeIndex) => ({
+        label: outcome.label,
+        odd: outcome.odd,
+        active: outcomeIndex === Math.min(1, row.outcomes.length - 1),
+      })),
+    }
+  })
   const primaryTotalRows = isBasketball ? getTotalPointsRows(match) : getTotalGoalsRows(match, false)
   const secondaryRows = isBasketball ? getHandicapRows(match) : getTotalCornersRows(match)
   const tertiaryRows = isBasketball ? getQuarterTotalRows(match.q3TotalOdds) : getTotalCardsRows()
@@ -1420,27 +1456,6 @@ function LiveEventContent({
     const scrollRect = scrollElement.getBoundingClientRect()
     syncStickyScoreHeaderVisibility(scoreRect.bottom <= scrollRect.top + 1)
   }, [syncStickyScoreHeaderVisibility])
-
-  const handlePlayerOddsWheel = useCallback((event: WheelEvent<HTMLDivElement>) => {
-    const horizontalDelta = getHorizontalWheelDelta(event.deltaX, event.deltaY, event.shiftKey)
-
-    if (horizontalDelta === 0) return
-
-    event.preventDefault()
-    event.stopPropagation()
-    event.currentTarget.scrollLeft += horizontalDelta
-  }, [])
-
-  const syncPlayerOddsRowScrollState = useCallback((rowId: string, element: HTMLDivElement) => {
-    const isScrolled = element.scrollLeft > 0
-    setScrolledOddsRows((current) => (
-      current[rowId] === isScrolled ? current : { ...current, [rowId]: isScrolled }
-    ))
-  }, [])
-
-  const schedulePlayerOddsRowScrollStateSync = useCallback((rowId: string, element: HTMLDivElement) => {
-    window.requestAnimationFrame(() => syncPlayerOddsRowScrollState(rowId, element))
-  }, [syncPlayerOddsRowScrollState])
 
   const handleContentScroll = useCallback((event: UIEvent<HTMLDivElement>) => {
     pendingScrollTopRef.current = event.currentTarget.scrollTop
@@ -1506,8 +1521,6 @@ function LiveEventContent({
       setIsCornersMarketOpen(true)
       setIsCardsMarketOpen(true)
       setIsDoubleChanceMarketOpen(true)
-      setIsShotsExpanded(false)
-      setScrolledOddsRows({})
       syncStickyScoreHeaderVisibility(false)
       scrollRef.current?.scrollTo({ top: 0, left: 0, behavior: 'auto' })
     }, 0)
@@ -2193,113 +2206,14 @@ function LiveEventContent({
 
           <div className={`live-event-page__market-collapse${isShotsMarketOpen ? ' live-event-page__market-collapse--open' : ''}`}>
             <div className="live-event-page__market-collapse-inner">
-              <div className="live-event-page__player-market">
-                <div className="live-event-page__player-list">
-                  {primaryPlayerPropRows.map((row) => (
-                    <div key={row.id} className="live-event-page__player-row">
-                      <div className="live-event-page__player-visual">
-                        <div className="live-event-page__player-avatar-wrap">
-                          <img src={row.image ?? playerAvatarFallback} alt="" className="live-event-page__player-avatar" />
-                        </div>
-                        <span className="live-event-page__player-stat-icon">
-                          <ChartBarIcon aria-hidden="true" className="live-event-page__player-stat-svg" weight="bold" />
-                        </span>
-                      </div>
-                      <div className="live-event-page__player-copy">
-                        <strong>{row.player}</strong>
-                        <span>{row.team}</span>
-                      </div>
-                    </div>
-                  ))}
-                  <div className={`live-event-page__player-extra${isShotsExpanded ? ' live-event-page__player-extra--open' : ''}`}>
-                    <div className="live-event-page__player-extra-inner">
-                      {extraPlayerPropRows.map((row) => (
-                        <div key={row.id} className="live-event-page__player-row">
-                          <div className="live-event-page__player-visual">
-                            <div className="live-event-page__player-avatar-wrap">
-                              <img src={row.image ?? playerAvatarFallback} alt="" className="live-event-page__player-avatar" />
-                            </div>
-                            <span className="live-event-page__player-stat-icon">
-                              <ChartBarIcon aria-hidden="true" className="live-event-page__player-stat-svg" weight="bold" />
-                            </span>
-                          </div>
-                          <div className="live-event-page__player-copy">
-                            <strong>{row.player}</strong>
-                            <span>{row.team}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="live-event-page__player-odds-list">
-                  {primaryPlayerPropRows.map((row) => (
-                    <div
-                      key={row.id}
-                      className={`live-event-page__player-odds-row-frame${scrolledOddsRows[row.id] ? ' live-event-page__player-odds-row-frame--scrolled' : ''}`}
-                    >
-                      <div
-                        className="live-event-page__player-odds-row"
-                        onWheel={handlePlayerOddsWheel}
-                        onScroll={(event) => syncPlayerOddsRowScrollState(row.id, event.currentTarget)}
-                        onTouchMove={(event) => schedulePlayerOddsRowScrollStateSync(row.id, event.currentTarget)}
-                        onTouchEnd={(event) => syncPlayerOddsRowScrollState(row.id, event.currentTarget)}
-                        onTouchCancel={(event) => syncPlayerOddsRowScrollState(row.id, event.currentTarget)}
-                        onPointerUp={(event) => syncPlayerOddsRowScrollState(row.id, event.currentTarget)}
-                      >
-                        {row.outcomes.map((outcome) => (
-                          <button key={outcome.label} className="live-event-page__player-odd">
-                            <span>{outcome.label}</span>
-                            <strong>{outcome.odd}</strong>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                  <div className={`live-event-page__player-extra live-event-page__player-extra--odds${isShotsExpanded ? ' live-event-page__player-extra--open' : ''}`}>
-                    <div className="live-event-page__player-extra-inner">
-                      {extraPlayerPropRows.map((row) => (
-                        <div
-                          key={row.id}
-                          className={`live-event-page__player-odds-row-frame${scrolledOddsRows[row.id] ? ' live-event-page__player-odds-row-frame--scrolled' : ''}`}
-                        >
-                          <div
-                            className="live-event-page__player-odds-row"
-                            onWheel={handlePlayerOddsWheel}
-                            onScroll={(event) => syncPlayerOddsRowScrollState(row.id, event.currentTarget)}
-                            onTouchMove={(event) => schedulePlayerOddsRowScrollStateSync(row.id, event.currentTarget)}
-                            onTouchEnd={(event) => syncPlayerOddsRowScrollState(row.id, event.currentTarget)}
-                            onTouchCancel={(event) => syncPlayerOddsRowScrollState(row.id, event.currentTarget)}
-                            onPointerUp={(event) => syncPlayerOddsRowScrollState(row.id, event.currentTarget)}
-                          >
-                            {row.outcomes.map((outcome) => (
-                              <button key={outcome.label} className="live-event-page__player-odd">
-                                <span>{outcome.label}</span>
-                                <strong>{outcome.odd}</strong>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                className="live-event-page__market-more"
-                aria-expanded={isShotsExpanded}
-                onClick={() => setIsShotsExpanded((current) => !current)}
+              <div
+                className="prematch-section__player-props live-event-page__player-props-slider"
+                aria-label={`Cards de ${playerMarketTitle}`}
               >
-                <span>{isShotsExpanded ? 'Ver Menos' : 'Ver Mais'}</span>
-                <CaretRightIcon
-                  aria-hidden="true"
-                  className={`live-event-page__market-more-icon${isShotsExpanded ? ' live-event-page__market-more-icon--expanded' : ''}`}
-                  weight="bold"
-                />
-              </button>
+                {playerPropCards.map((player) => (
+                  <PreMatchPlayerPropCard key={player.id} player={player} />
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -2585,11 +2499,6 @@ interface ActiveMatchState {
   matchesKey: string
   requestedIndex: number
   index: number
-}
-
-const getHorizontalWheelDelta = (deltaX: number, deltaY: number, shiftKey: boolean) => {
-  if (Math.abs(deltaX) >= Math.abs(deltaY)) return deltaX
-  return shiftKey ? deltaY : 0
 }
 
 const isMobileTouchScreen = () => (

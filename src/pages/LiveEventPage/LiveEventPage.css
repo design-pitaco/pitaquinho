@@ -1972,6 +1972,13 @@
   overflow: hidden;
 }
 
+.live-event-page__market-card .prematch-section__player-props.live-event-page__player-props-slider {
+  width: calc(100% + (var(--live-event-market-card-padding) * 2));
+  margin-left: calc(var(--live-event-market-card-padding) * -1);
+  margin-right: calc(var(--live-event-market-card-padding) * -1);
+  padding: 0 var(--live-event-market-card-padding) 2px;
+}
+
 .live-event-page__player-market {
   display: grid;
   grid-template-columns: 124px minmax(0, 1fr);
