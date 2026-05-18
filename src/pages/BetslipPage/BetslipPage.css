@@ -1,7 +1,7 @@
 .betslip-page {
   --betslip-page-content-padding: 20px;
   --betslip-page-action-padding: 12px;
-  --betslip-page-footer-height: 218px;
+  --betslip-page-footer-height: 226px;
   position: fixed;
   inset: 0;
   z-index: 3200;
@@ -257,15 +257,15 @@
 }
 
 .betslip-page--keyboard-open {
-  --betslip-page-footer-height: 367px;
+  --betslip-page-footer-height: 375px;
 }
 
 .betslip-page--simple-split {
-  --betslip-page-footer-height: 166px;
+  --betslip-page-footer-height: 174px;
 }
 
 .betslip-page--simple-split.betslip-page--keyboard-open {
-  --betslip-page-footer-height: 314px;
+  --betslip-page-footer-height: 322px;
 }
 
 .betslip-page__selections {
@@ -1257,24 +1257,39 @@
 }
 
 .betslip-page__confirm-button {
+  --betslip-confirm-fill-width: 40px;
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   width: 100%;
-  height: 40px;
+  height: 48px;
   margin-top: 16px;
-  padding: 0 20px;
+  padding: 4px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #5228ff 0%, #ae18ff 100%);
+  overflow: hidden;
+  background: #1a1a1a;
   color: #ffffff;
+  font-family: inherit;
   font-size: 12px;
   font-weight: 700;
   line-height: 18px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+  transition: opacity 140ms ease;
 }
 
 .betslip-page__confirm-button:disabled {
   cursor: default;
+}
+
+.betslip-page__confirm-button:focus-visible {
+  outline: 2px solid rgba(210, 255, 114, 0.86);
+  outline-offset: 2px;
+}
+
+.betslip-page__confirm-button--dragging {
+  cursor: grabbing;
 }
 
 .betslip-page__confirm-button--disabled {
@@ -1282,6 +1297,8 @@
 }
 
 .betslip-page__confirm-label,
+.betslip-page__confirm-fill,
+.betslip-page__confirm-icon,
 .betslip-page__confirm-spinner-wrap {
   transition:
     opacity 140ms ease,
@@ -1289,13 +1306,56 @@
 }
 
 .betslip-page__confirm-label {
+  position: absolute;
+  inset: 4px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   opacity: 1;
   transform: translateY(0) scale(1);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.betslip-page__confirm-fill {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 2;
+  width: var(--betslip-confirm-fill-width);
+  height: 40px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: linear-gradient(90deg, #5228ff 0%, #ae18ff 100%);
+  transform: translateZ(0);
+  transition:
+    width 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 140ms ease,
+    transform 140ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: width;
+  pointer-events: none;
+}
+
+.betslip-page__confirm-button--dragging .betslip-page__confirm-fill {
+  transition:
+    opacity 140ms ease,
+    transform 140ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.betslip-page__confirm-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 20px;
+  height: 20px;
+  color: #ffffff;
 }
 
 .betslip-page__confirm-spinner-wrap {
   position: absolute;
-  inset: 0;
+  inset: 4px;
+  z-index: 3;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1309,14 +1369,19 @@
   transform: translateY(-2px) scale(0.96);
 }
 
+.betslip-page__confirm-button--loading .betslip-page__confirm-icon {
+  opacity: 0;
+  transform: scale(0.76);
+}
+
 .betslip-page__confirm-button--loading .betslip-page__confirm-spinner-wrap {
   opacity: 1;
   transform: translateY(0) scale(1);
 }
 
 .betslip-page__confirm-spinner {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 999px;
   background: conic-gradient(from 0deg, #ffffff 0deg, rgba(255, 255, 255, 0.78) 210deg, rgba(255, 255, 255, 0) 330deg, rgba(255, 255, 255, 0) 360deg);
   mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1.8px));

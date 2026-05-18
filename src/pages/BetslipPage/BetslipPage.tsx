@@ -6,6 +6,8 @@ import {
   useRef,
   useState,
   type AnimationEvent,
+  type CSSProperties,
+  type KeyboardEvent,
   type MouseEvent,
   type PointerEvent,
 } from 'react'
@@ -68,6 +70,10 @@ const animatedFooterValueDurationMs = 520
 const quickStakeFeedbackClassName = 'betslip-page__quick-stake--feedback'
 const betslipTabIndicatorAnimationDurationMs = 360
 const betslipConfirmDelayMs = 3000
+const betslipConfirmDragThreshold = 0.6
+const betslipConfirmCompleteAnimationMs = 180
+const betslipConfirmKnobSizePx = 40
+const betslipConfirmTrackPaddingPx = 4
 const betslipExitDelayMs = 320
 const betslipCardRemoveDelayMs = 280
 const betslipBuilderLegRemoveDelayMs = 220
@@ -137,6 +143,10 @@ function formatCurrency(cents: number) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`
+}
+
+function formatConfirmCurrency(cents: number) {
+  return formatCurrency(cents).replace('R$', 'R$ ')
 }
 
 function formatStakeInput(cents: number) {
@@ -753,6 +763,248 @@ interface BetslipFooterProps {
   onStakeKeyboardOpenChange: (isOpen: boolean) => void
 }
 
+interface DragConfirmButtonProps {
+  isDisabled: boolean
+  isStakeEmpty: boolean
+  isSubmitting: boolean
+  potentialWinCents: number
+  stakeCents: number
+  onConfirm: (stakeCents: number, potentialWinCents: number) => void
+}
+
+const clampConfirmProgress = (progress: number) => Math.max(0, Math.min(progress, 1))
+
+const getConfirmInnerWidth = (trackWidth: number) => (
+  Math.max(
+    betslipConfirmKnobSizePx,
+    trackWidth - betslipConfirmTrackPaddingPx * 2
+  )
+)
+
+const getConfirmFillWidth = (trackWidth: number, progress: number) => {
+  const innerWidth = getConfirmInnerWidth(trackWidth)
+
+  return betslipConfirmKnobSizePx + (
+    innerWidth - betslipConfirmKnobSizePx
+  ) * clampConfirmProgress(progress)
+}
+
+const getConfirmFillRatio = (trackWidth: number, progress: number) => (
+  getConfirmFillWidth(trackWidth, progress) / getConfirmInnerWidth(trackWidth)
+)
+
+function DragConfirmButton({
+  isDisabled,
+  isStakeEmpty,
+  isSubmitting,
+  potentialWinCents,
+  stakeCents,
+  onConfirm,
+}: DragConfirmButtonProps) {
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const dragStartXRef = useRef(0)
+  const dragStartProgressRef = useRef(0)
+  const dragProgressRef = useRef(0)
+  const completeTimerRef = useRef<number | null>(null)
+  const [trackWidth, setTrackWidth] = useState(0)
+  const [dragProgress, setDragProgress] = useState(0)
+  const [isDraggingConfirm, setIsDraggingConfirm] = useState(false)
+  const [isCompletingDrag, setIsCompletingDrag] = useState(false)
+  const isInteractionDisabled = isDisabled || isCompletingDrag
+  const confirmLabel = `Desliza para apostar ${formatConfirmCurrency(stakeCents)}`
+  const fillWidth = getConfirmFillWidth(trackWidth, isSubmitting ? 1 : dragProgress)
+  const confirmButtonStyle = {
+    '--betslip-confirm-fill-width': `${fillWidth}px`,
+  } as CSSProperties
+
+  const setVisualProgress = useCallback((nextProgress: number) => {
+    const clampedProgress = clampConfirmProgress(nextProgress)
+
+    dragProgressRef.current = clampedProgress
+    setDragProgress(clampedProgress)
+  }, [])
+
+  const clearCompleteTimer = useCallback(() => {
+    if (completeTimerRef.current === null) return
+
+    window.clearTimeout(completeTimerRef.current)
+    completeTimerRef.current = null
+  }, [])
+
+  const getMaxDragTravel = useCallback(() => {
+    const buttonEl = buttonRef.current
+    if (!buttonEl) return 1
+
+    const trackRect = buttonEl.getBoundingClientRect()
+    const innerWidth = getConfirmInnerWidth(trackRect.width)
+
+    return Math.max(1, innerWidth - betslipConfirmKnobSizePx)
+  }, [])
+
+  const completeConfirm = useCallback(() => {
+    if (isInteractionDisabled) return
+
+    clearCompleteTimer()
+    setIsDraggingConfirm(false)
+    setIsCompletingDrag(true)
+    setVisualProgress(1)
+
+    completeTimerRef.current = window.setTimeout(() => {
+      completeTimerRef.current = null
+      onConfirm(stakeCents, potentialWinCents)
+      setIsCompletingDrag(false)
+    }, betslipConfirmCompleteAnimationMs)
+  }, [
+    clearCompleteTimer,
+    isInteractionDisabled,
+    onConfirm,
+    potentialWinCents,
+    setVisualProgress,
+    stakeCents,
+  ])
+
+  useLayoutEffect(() => {
+    const buttonEl = buttonRef.current
+    if (!buttonEl) return undefined
+
+    const updateTrackWidth = () => {
+      const nextTrackWidth = buttonEl.getBoundingClientRect().width
+
+      setTrackWidth((currentTrackWidth) => (
+        currentTrackWidth === nextTrackWidth ? currentTrackWidth : nextTrackWidth
+      ))
+    }
+
+    updateTrackWidth()
+
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', updateTrackWidth)
+
+      return () => window.removeEventListener('resize', updateTrackWidth)
+    }
+
+    const resizeObserver = new ResizeObserver(updateTrackWidth)
+    resizeObserver.observe(buttonEl)
+
+    return () => resizeObserver.disconnect()
+  }, [])
+
+  useEffect(() => () => {
+    clearCompleteTimer()
+  }, [clearCompleteTimer])
+
+  useEffect(() => {
+    if (!isSubmitting && !isDisabled) return undefined
+
+    const frameId = window.requestAnimationFrame(() => {
+      if (isSubmitting) {
+        setIsCompletingDrag(false)
+        setVisualProgress(1)
+        return
+      }
+
+      clearCompleteTimer()
+      setIsCompletingDrag(false)
+      setIsDraggingConfirm(false)
+      setVisualProgress(0)
+    })
+
+    return () => window.cancelAnimationFrame(frameId)
+  }, [clearCompleteTimer, isDisabled, isSubmitting, setVisualProgress])
+
+  const handlePointerDown = (event: PointerEvent<HTMLButtonElement>) => {
+    if (isInteractionDisabled || event.button !== 0) return
+
+    event.preventDefault()
+    clearCompleteTimer()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    dragStartXRef.current = event.clientX
+    dragStartProgressRef.current = dragProgressRef.current
+    setIsCompletingDrag(false)
+    setIsDraggingConfirm(true)
+  }
+
+  const handlePointerMove = (event: PointerEvent<HTMLButtonElement>) => {
+    if (!isDraggingConfirm || isInteractionDisabled) return
+
+    event.preventDefault()
+    const dragDelta = event.clientX - dragStartXRef.current
+    const nextProgress = dragStartProgressRef.current + dragDelta / getMaxDragTravel()
+
+    setVisualProgress(nextProgress)
+  }
+
+  const handlePointerUp = (event: PointerEvent<HTMLButtonElement>) => {
+    if (!isDraggingConfirm) return
+
+    event.preventDefault()
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+
+    setIsDraggingConfirm(false)
+
+    const currentTrackWidth = event.currentTarget.getBoundingClientRect().width
+    const filledRatio = getConfirmFillRatio(currentTrackWidth, dragProgressRef.current)
+
+    if (filledRatio >= betslipConfirmDragThreshold) {
+      completeConfirm()
+      return
+    }
+
+    setVisualProgress(0)
+  }
+
+  const handlePointerCancel = (event: PointerEvent<HTMLButtonElement>) => {
+    if (!isDraggingConfirm) return
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+
+    setIsDraggingConfirm(false)
+    setVisualProgress(0)
+  }
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (!['Enter', ' '].includes(event.key)) return
+
+    event.preventDefault()
+    completeConfirm()
+  }
+
+  return (
+    <button
+      type="button"
+      ref={buttonRef}
+      className={[
+        'betslip-page__confirm-button',
+        isDraggingConfirm ? 'betslip-page__confirm-button--dragging' : '',
+        isSubmitting ? 'betslip-page__confirm-button--loading' : '',
+        isSubmitting || isCompletingDrag ? 'betslip-page__confirm-button--complete' : '',
+        isStakeEmpty ? 'betslip-page__confirm-button--disabled' : '',
+      ].filter(Boolean).join(' ')}
+      style={confirmButtonStyle}
+      aria-busy={isSubmitting}
+      aria-label={confirmLabel}
+      disabled={isInteractionDisabled}
+      onKeyDown={handleKeyDown}
+      onPointerCancel={handlePointerCancel}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+    >
+      <span className="betslip-page__confirm-label">{confirmLabel}</span>
+      <span className="betslip-page__confirm-fill" aria-hidden="true">
+        <CaretRightIcon className="betslip-page__confirm-icon" weight="bold" />
+      </span>
+      <span className="betslip-page__confirm-spinner-wrap" aria-hidden="true">
+        <span className="betslip-page__confirm-spinner" />
+      </span>
+    </button>
+  )
+}
+
 function BetslipFooter({
   activeStakeCents,
   betMode,
@@ -988,25 +1240,14 @@ function BetslipFooter({
         </div>
       </div>
 
-      <button
-        type="button"
-        className={[
-          'betslip-page__confirm-button',
-          isSubmitting ? 'betslip-page__confirm-button--loading' : '',
-          isStakeEmpty ? 'betslip-page__confirm-button--disabled' : '',
-        ].filter(Boolean).join(' ')}
-        aria-busy={isSubmitting}
-        disabled={isConfirmDisabled}
-        onClick={() => {
-          if (isConfirmDisabled) return
-          onConfirm(stakeCents, potentialWinCents)
-        }}
-      >
-        <span className="betslip-page__confirm-label">Confirmar aposta</span>
-        <span className="betslip-page__confirm-spinner-wrap">
-          <span className="betslip-page__confirm-spinner" aria-hidden="true" />
-        </span>
-      </button>
+      <DragConfirmButton
+        isDisabled={isConfirmDisabled}
+        isStakeEmpty={isStakeEmpty}
+        isSubmitting={isSubmitting}
+        potentialWinCents={potentialWinCents}
+        stakeCents={stakeCents}
+        onConfirm={onConfirm}
+      />
     </footer>
   )
 }
