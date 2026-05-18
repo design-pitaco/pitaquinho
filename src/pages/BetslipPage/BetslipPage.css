@@ -1769,17 +1769,3 @@
     --betslip-page-action-padding: 4px;
   }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .betslip-page,
-  .betslip-page--leaving,
-  .betslip-page-card--added,
-  .betslip-page-card--removing,
-  .betslip-page-card--updated,
-  .betslip-page-card__builder-leg--added,
-  .betslip-page-card__builder-leg--removing,
-  .betslip-success-sheet,
-  .betslip-success-sheet--leaving {
-    animation-duration: 1ms;
-  }
-}

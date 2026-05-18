@@ -31,8 +31,12 @@
   background-size: 100% 168px;
 }
 
-.promotions-page .header__bg-dark {
-  height: calc(var(--highlight-header-bg-height) + 72px);
+.promotions-page .header.header--competition-rail .header__bg-dark {
+  height: 264px;
+}
+
+.promotions-page--header-compact .header.header--competition-rail .header__bg-dark {
+  height: 232px;
 }
 
 .promotions-page__tabs {

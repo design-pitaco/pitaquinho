@@ -628,7 +628,12 @@ const liveMarketLabels: Record<string, string> = {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const getLivePlayerProps = (match: LiveMatchCardMatch, sport: string, marketId: string): MatchPlayerProp[] => {
+export const getLivePlayerProps = (
+  match: LiveMatchCardMatch,
+  sport: string,
+  marketId: string,
+  playerLimit = LIVE_PLAYER_PROPS_PER_MATCH
+): MatchPlayerProp[] => {
   const optionSets = sport === 'basquete'
     ? marketId === LIVE_BASKETBALL_PLAYER_ASSISTS_MARKET_ID
       ? liveBasketballPlayerAssistOptionSets
@@ -654,7 +659,7 @@ export const getLivePlayerProps = (match: LiveMatchCardMatch, sport: string, mar
   const uniquePlayerNames = new Set<string>()
 
   return orderedPlayers.reduce<MatchPlayerProp[]>((players, player) => {
-    if (players.length >= LIVE_PLAYER_PROPS_PER_MATCH || uniquePlayerNames.has(player.name)) return players
+    if (players.length >= playerLimit || uniquePlayerNames.has(player.name)) return players
 
     uniquePlayerNames.add(player.name)
     players.push({

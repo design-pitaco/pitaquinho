@@ -1086,7 +1086,8 @@ const getTeamPlayerProfiles = (teamName: string, sport: string, marketId: string
 export const getMatchPlayerProps = (
   match: PlayerPropsMatch,
   sport: string,
-  marketId = sport === 'basquete' ? BASKETBALL_PLAYER_PROPS_MARKET_ID : FOOTBALL_PLAYER_PROPS_MARKET_ID
+  marketId = sport === 'basquete' ? BASKETBALL_PLAYER_PROPS_MARKET_ID : FOOTBALL_PLAYER_PROPS_MARKET_ID,
+  playerLimit = PLAYER_PROPS_PER_MATCH
 ): MatchPlayerProp[] => {
   const optionSets = getPlayerPropOptionSets(sport, marketId)
   const image = getPlayerPropAvatar(sport)
@@ -1103,7 +1104,7 @@ export const getMatchPlayerProps = (
   const uniquePlayerNames = new Set<string>()
 
   return orderedPlayers.reduce<MatchPlayerProp[]>((players, player) => {
-    if (players.length >= PLAYER_PROPS_PER_MATCH || uniquePlayerNames.has(player.name)) return players
+    if (players.length >= playerLimit || uniquePlayerNames.has(player.name)) return players
 
     uniquePlayerNames.add(player.name)
     players.push({

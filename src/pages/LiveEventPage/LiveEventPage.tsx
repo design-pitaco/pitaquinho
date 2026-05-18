@@ -136,6 +136,7 @@ interface PlayerShotMarket {
   id: string
   player: string
   team: string
+  position?: string
   image?: string
   outcomes: ShotOutcome[]
 }
@@ -170,6 +171,8 @@ const doubleChanceDisplayNames: Record<string, string> = {
 const LIVE_EVENT_HOME_FALLBACK_GLOW = '#00a0dd'
 const LIVE_EVENT_AWAY_FALLBACK_GLOW = '#ad0924'
 const LIVE_EVENT_LOGO_COLOR_CANVAS_MAX_SIZE = 72
+const LIVE_EVENT_PLAYER_PROPS_PER_MARKET = 10
+const LIVE_EVENT_PLAYER_PROPS_PER_TEAM = Math.ceil(LIVE_EVENT_PLAYER_PROPS_PER_MARKET / 2)
 const logoDominantColorCache = new Map<string, string | null>()
 const pendingLogoDominantColorRequests = new Map<string, Promise<string | null>>()
 
@@ -551,7 +554,18 @@ const basketballTeamPlayers: Record<string, string[]> = {
   Girona: ['Marianna Tolo', 'Regan Magarity', 'Laura Pena', 'Carolina Guerrero'],
 }
 
-const BASKETBALL_FALLBACK_PLAYERS = ['Armador Titular', 'Ala Principal', 'Pivo', 'Sexto Homem']
+const BASKETBALL_FALLBACK_PLAYERS = [
+  'Armador Titular',
+  'Ala Principal',
+  'Pivo',
+  'Sexto Homem',
+  'Ala-pivo',
+  'Especialista 3PT',
+  'Armador Reserva',
+  'Defensor Perimetral',
+  'Pontuador do Banco',
+  'Rotacao',
+]
 
 function slugifyTeamName(teamName: string): string {
   return teamName
@@ -582,6 +596,13 @@ const supplementalShotOutcomes = [
   shotOutcomes([['0.5+', '2.22x'], ['1.5+', '3.70x'], ['2.5+', '8.80x']]),
 ]
 
+const supplementalAssistOutcomes = [
+  shotOutcomes([['1.0+', '1.68x'], ['2.0+', '2.35x'], ['3.0+', '4.20x']]),
+  shotOutcomes([['1.0+', '1.74x'], ['2.0+', '2.50x'], ['3.0+', '4.60x']]),
+  shotOutcomes([['1.0+', '1.82x'], ['2.0+', '2.70x'], ['3.0+', '5.10x']]),
+  shotOutcomes([['1.0+', '1.92x'], ['2.0+', '2.95x'], ['3.0+', '5.80x']]),
+]
+
 function normalizePlayerName(playerName: string): string {
   return slugifyTeamName(playerName.replace(/\s+/g, ' '))
 }
@@ -600,35 +621,50 @@ function buildSupplementalShotMarket(teamName: string, playerName: string, index
   }
 }
 
-function getTeamShotMarketRows(teamName: string): PlayerShotMarket[] {
+function buildSupplementalAssistMarket(teamName: string, playerName: string, index: number, isBasketball: boolean): PlayerShotMarket {
+  return {
+    id: `${slugifyTeamName(teamName)}-${normalizePlayerName(playerName)}-assist-${index}`,
+    player: playerName,
+    team: teamName,
+    position: isBasketball ? 'AST' : 'MEI',
+    outcomes: supplementalAssistOutcomes[index % supplementalAssistOutcomes.length],
+  }
+}
+
+function getTeamShotMarketRows(teamName: string, playerLimit = 4): PlayerShotMarket[] {
   const rows = [...(teamShotMarkets[teamName] ?? buildFallbackShotMarkets(teamName))]
   const mappedPlayers = Array.from(new Set((TEAM_EVENTS[teamName] ?? []).map((event) => event.player)))
   const fallbackPlayers = FALLBACK_PLAYERS.map((player) => `${player}`)
   const candidates = [...mappedPlayers, ...fallbackPlayers]
 
   for (const playerName of candidates) {
-    if (rows.length >= 4) break
+    if (rows.length >= playerLimit) break
     if (hasPlayer(rows, playerName)) continue
     rows.push(buildSupplementalShotMarket(teamName, playerName, rows.length))
   }
 
-  return rows.slice(0, 4)
+  return rows.slice(0, playerLimit)
 }
 
 function getShotsOnGoalRows(match: LiveEventMatch, isExpanded: boolean): PlayerShotMarket[] {
+  const playerLimit = isExpanded ? LIVE_EVENT_PLAYER_PROPS_PER_MARKET : 4
+  const teamPlayerLimit = isExpanded ? LIVE_EVENT_PLAYER_PROPS_PER_TEAM : 4
   const rows = [
-    ...getTeamShotMarketRows(match.homeTeam.name),
-    ...getTeamShotMarketRows(match.awayTeam.name),
+    ...getTeamShotMarketRows(match.homeTeam.name, teamPlayerLimit),
+    ...getTeamShotMarketRows(match.awayTeam.name, teamPlayerLimit),
   ]
-  return rows.slice(0, isExpanded ? 8 : 4)
+  return rows.slice(0, playerLimit)
 }
 
 function formatMarketLine(line: number): string {
   return Number.isInteger(line) ? `${line}.0` : `${line}`
 }
 
-function getBasketballTeamPlayers(teamName: string): string[] {
-  return basketballTeamPlayers[teamName] ?? BASKETBALL_FALLBACK_PLAYERS
+function getBasketballTeamPlayers(teamName: string, playerLimit?: number): string[] {
+  const candidates = [...(basketballTeamPlayers[teamName] ?? []), ...BASKETBALL_FALLBACK_PLAYERS]
+  const players = Array.from(new Set(candidates))
+
+  return typeof playerLimit === 'number' ? players.slice(0, playerLimit) : players
 }
 
 function buildBasketballPlayerPointMarket(teamName: string, playerName: string, index: number): PlayerShotMarket {
@@ -638,6 +674,7 @@ function buildBasketballPlayerPointMarket(teamName: string, playerName: string, 
     id: `${slugifyTeamName(teamName)}-${normalizePlayerName(playerName)}-points`,
     player: playerName,
     team: teamName,
+    position: 'PTS',
     outcomes: shotOutcomes([
       [`${formatMarketLine(baseLine)}+`, `${(1.48 + index * 0.08).toFixed(2)}x`],
       [`${formatMarketLine(baseLine + 5)}+`, `${(2.05 + index * 0.16).toFixed(2)}x`],
@@ -646,18 +683,45 @@ function buildBasketballPlayerPointMarket(teamName: string, playerName: string, 
   }
 }
 
-function getBasketballTeamPlayerRows(teamName: string): PlayerShotMarket[] {
-  return getBasketballTeamPlayers(teamName)
-    .slice(0, 4)
+function getBasketballTeamPlayerRows(teamName: string, playerLimit = 4): PlayerShotMarket[] {
+  return getBasketballTeamPlayers(teamName, playerLimit)
     .map((playerName, index) => buildBasketballPlayerPointMarket(teamName, playerName, index))
 }
 
 function getBasketballPlayerPointRows(match: LiveEventMatch, isExpanded: boolean): PlayerShotMarket[] {
+  const playerLimit = isExpanded ? LIVE_EVENT_PLAYER_PROPS_PER_MARKET : 4
+  const teamPlayerLimit = isExpanded ? LIVE_EVENT_PLAYER_PROPS_PER_TEAM : 4
   const rows = [
-    ...getBasketballTeamPlayerRows(match.homeTeam.name),
-    ...getBasketballTeamPlayerRows(match.awayTeam.name),
+    ...getBasketballTeamPlayerRows(match.homeTeam.name, teamPlayerLimit),
+    ...getBasketballTeamPlayerRows(match.awayTeam.name, teamPlayerLimit),
   ]
-  return rows.slice(0, isExpanded ? 8 : 4)
+  return rows.slice(0, playerLimit)
+}
+
+function getTeamAssistMarketRows(teamName: string, isBasketball: boolean, playerLimit = 4): PlayerShotMarket[] {
+  const playerCandidates = isBasketball
+    ? getBasketballTeamPlayers(teamName, playerLimit)
+    : [
+      ...Array.from(new Set((TEAM_EVENTS[teamName] ?? []).map((event) => event.player))),
+      ...FALLBACK_PLAYERS,
+    ]
+  const rows: PlayerShotMarket[] = []
+
+  for (const playerName of playerCandidates) {
+    if (rows.length >= playerLimit) break
+    if (hasPlayer(rows, playerName)) continue
+    rows.push(buildSupplementalAssistMarket(teamName, playerName, rows.length, isBasketball))
+  }
+
+  return rows
+}
+
+function getAssistPlayerPropRows(match: LiveEventMatch, isBasketball: boolean): PlayerShotMarket[] {
+  const rows = [
+    ...getTeamAssistMarketRows(match.homeTeam.name, isBasketball, LIVE_EVENT_PLAYER_PROPS_PER_TEAM),
+    ...getTeamAssistMarketRows(match.awayTeam.name, isBasketball, LIVE_EVENT_PLAYER_PROPS_PER_TEAM),
+  ]
+  return rows.slice(0, LIVE_EVENT_PLAYER_PROPS_PER_MARKET)
 }
 
 function getPlayerPropRows(match: LiveEventMatch, isBasketball: boolean, isExpanded: boolean): PlayerShotMarket[] {
@@ -1414,12 +1478,12 @@ function LiveEventContent({
         ...match,
         id: match.id ?? 'live-event',
         time: match.time ?? scheduledDateTime,
-      }, contentSport, marketId)
+      }, contentSport, marketId, LIVE_EVENT_PLAYER_PROPS_PER_MARKET)
       : getMatchPlayerProps({
         id: match.id ?? 'live-event',
         homeTeam: match.homeTeam,
         awayTeam: match.awayTeam,
-      }, contentSport, marketId)
+      }, contentSport, marketId, LIVE_EVENT_PLAYER_PROPS_PER_MARKET)
     const fallbackCards: MatchPlayerProp[] = fallbackRows.map((row) => {
       const teamSide = row.team === match.awayTeam.name ? 'away' : 'home'
 
@@ -1430,7 +1494,7 @@ function LiveEventContent({
         teamIcon: teamSide === 'away' ? match.awayTeam.icon : match.homeTeam.icon,
         teamSide,
         sport: contentSport,
-        position: getPlayerPropCardPosition(row.player, isBasketball),
+        position: row.position ?? getPlayerPropCardPosition(row.player, isBasketball),
         image: row.image ?? playerAvatarFallback,
         options: row.outcomes.map((outcome, outcomeIndex) => ({
           label: outcome.label,
@@ -1439,8 +1503,17 @@ function LiveEventContent({
         })),
       }
     })
+    const uniqueCardKeys = new Set<string>()
+    const playerCards = [...syncedCards, ...fallbackCards].reduce<MatchPlayerProp[]>((cards, player) => {
+      const cardKey = `${normalizePlayerName(player.teamName)}:${normalizePlayerName(player.playerName)}`
+      if (cards.length >= LIVE_EVENT_PLAYER_PROPS_PER_MARKET || uniqueCardKeys.has(cardKey)) return cards
 
-    return (syncedCards.length > 0 ? syncedCards : fallbackCards).map((player) => ({
+      uniqueCardKeys.add(cardKey)
+      cards.push(player)
+      return cards
+    }, [])
+
+    return playerCards.map((player) => ({
       ...player,
       eventId,
       marketId,
@@ -1454,7 +1527,7 @@ function LiveEventContent({
     }))
   }
   const playerPropCards = buildEventPlayerPropCards(playerPropsMarketId, getPlayerPropRows(match, isBasketball, true))
-  const assistPlayerPropCards = buildEventPlayerPropCards(assistsMarketId)
+  const assistPlayerPropCards = buildEventPlayerPropCards(assistsMarketId, getAssistPlayerPropRows(match, isBasketball))
   const primaryTotalRows = isBasketball ? getTotalPointsRows(match) : getTotalGoalsRows(match, false)
   const secondaryRows = isBasketball ? getHandicapRows(match) : getTotalCornersRows(match)
   const tertiaryRows = isBasketball ? getQuarterTotalRows(match.q3TotalOdds) : getTotalCardsRows()

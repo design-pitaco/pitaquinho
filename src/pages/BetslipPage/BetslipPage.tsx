@@ -810,9 +810,12 @@ function DragConfirmButton({
   const [dragProgress, setDragProgress] = useState(0)
   const [isDraggingConfirm, setIsDraggingConfirm] = useState(false)
   const [isCompletingDrag, setIsCompletingDrag] = useState(false)
-  const isInteractionDisabled = isDisabled || isCompletingDrag
+  const [hasCompletedDrag, setHasCompletedDrag] = useState(false)
+  const [isLoadingVisible, setIsLoadingVisible] = useState(false)
+  const isCompleteState = hasCompletedDrag || isSubmitting
+  const isInteractionDisabled = isDisabled || isCompletingDrag || hasCompletedDrag
   const confirmLabel = `Desliza para apostar ${formatConfirmCurrency(stakeCents)}`
-  const fillWidth = getConfirmFillWidth(trackWidth, isSubmitting ? 1 : dragProgress)
+  const fillWidth = getConfirmFillWidth(trackWidth, isCompleteState ? 1 : dragProgress)
   const confirmButtonStyle = {
     '--betslip-confirm-fill-width': `${fillWidth}px`,
   } as CSSProperties
@@ -846,13 +849,16 @@ function DragConfirmButton({
 
     clearCompleteTimer()
     setIsDraggingConfirm(false)
+    setHasCompletedDrag(true)
     setIsCompletingDrag(true)
+    setIsLoadingVisible(false)
     setVisualProgress(1)
 
     completeTimerRef.current = window.setTimeout(() => {
       completeTimerRef.current = null
-      onConfirm(stakeCents, potentialWinCents)
       setIsCompletingDrag(false)
+      setIsLoadingVisible(true)
+      onConfirm(stakeCents, potentialWinCents)
     }, betslipConfirmCompleteAnimationMs)
   }, [
     clearCompleteTimer,
@@ -898,14 +904,18 @@ function DragConfirmButton({
 
     const frameId = window.requestAnimationFrame(() => {
       if (isSubmitting) {
+        setHasCompletedDrag(true)
         setIsCompletingDrag(false)
+        setIsLoadingVisible(true)
         setVisualProgress(1)
         return
       }
 
       clearCompleteTimer()
+      setHasCompletedDrag(false)
       setIsCompletingDrag(false)
       setIsDraggingConfirm(false)
+      setIsLoadingVisible(false)
       setVisualProgress(0)
     })
 
@@ -980,12 +990,12 @@ function DragConfirmButton({
       className={[
         'betslip-page__confirm-button',
         isDraggingConfirm ? 'betslip-page__confirm-button--dragging' : '',
-        isSubmitting ? 'betslip-page__confirm-button--loading' : '',
-        isSubmitting || isCompletingDrag ? 'betslip-page__confirm-button--complete' : '',
+        isLoadingVisible || isSubmitting ? 'betslip-page__confirm-button--loading' : '',
+        hasCompletedDrag || isCompletingDrag || isSubmitting ? 'betslip-page__confirm-button--complete' : '',
         isStakeEmpty ? 'betslip-page__confirm-button--disabled' : '',
       ].filter(Boolean).join(' ')}
       style={confirmButtonStyle}
-      aria-busy={isSubmitting}
+      aria-busy={isLoadingVisible || isSubmitting}
       aria-label={confirmLabel}
       disabled={isInteractionDisabled}
       onKeyDown={handleKeyDown}
