@@ -480,6 +480,10 @@
   filter: brightness(0) invert(1);
 }
 
+:root[data-theme="light"] .offer-card__button.odd-button--selected .offer-card__boost-icon {
+  filter: brightness(0);
+}
+
 .offer-card__new-odd {
   font-family: 'Red Hat Text', sans-serif;
   font-size: 12px;

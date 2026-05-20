@@ -270,11 +270,6 @@
   filter: brightness(0);
 }
 
-:root[data-theme="light"] .odd-button--selected .banner-card__arrow,
-:root[data-theme="light"] .odd-button--selected .banner-card__combinada-arrow {
-  filter: none;
-}
-
 .banner-card__new-odd {
   font-family: 'Red Hat Text', sans-serif;
   font-size: 12px;

@@ -135,8 +135,20 @@ button {
 }
 
 :root[data-theme="light"] {
-  --odd-selected-surface-default: var(--primitives-lightdark-lightdark-700);
-  --odd-selected-surface-banner: var(--primitives-lightdark-lightdark-800);
+  --odd-selected-surface-default: var(--tokens-layer-layer-01);
+  --odd-selected-surface-banner: var(--tokens-layer-layer-01);
+  --odd-selected-highlight: linear-gradient(
+    90deg,
+    rgb(var(--tokens-layer-layer-gradient-05-rgb) / 0.32) 0%,
+    rgb(var(--tokens-layer-layer-gradient-06-rgb) / 0.32) 100%
+  );
+  --odd-selected-border-gradient: linear-gradient(
+    90deg,
+    var(--tokens-layer-layer-gradient-05) 0%,
+    var(--tokens-layer-layer-gradient-06) 100%
+  );
+  --odd-selected-shadow-ring: transparent;
+  --odd-selected-shadow-glow: transparent;
 }
 
 .live-section__odd-btn.odd-button--selected,
@@ -273,6 +285,35 @@ button {
   fill: currentColor;
 }
 
+:root[data-theme="light"] :is(
+  .live-section__odd-btn,
+  .prematch-section__odd-btn,
+  .live-event-page__odd-btn,
+  .live-event-page__market-odd,
+  .live-event-page__player-odd,
+  .banner-card__odd-btn,
+  .banner-card__live-odd-btn,
+  .banner-card__boosted-btn,
+  .banner-card__combinada-btn,
+  .offer-card__button,
+  .prematch-section__player-prop-option
+).odd-button--selected,
+:root[data-theme="light"] :is(
+  .live-section__odd-btn,
+  .prematch-section__odd-btn,
+  .live-event-page__odd-btn,
+  .live-event-page__market-odd,
+  .live-event-page__player-odd,
+  .banner-card__odd-btn,
+  .banner-card__live-odd-btn,
+  .banner-card__boosted-btn,
+  .banner-card__combinada-btn,
+  .offer-card__button,
+  .prematch-section__player-prop-option
+).odd-button--selected * {
+  color: var(--tokens-text-text-01);
+}
+
 .prematch-section__player-prop-option.prematch-section__player-prop-option--active:not(.odd-button--selected) {
   background-color: var(--tokens-button-button-odds-02);
   border-color: transparent;
@@ -344,11 +385,13 @@ img {
   transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.home--liquid-glass-new .sliding-chip-indicator {
+.home--liquid-glass-new .sliding-chip-indicator,
+.promotions-page--liquid-glass-new .sliding-chip-indicator {
   background: transparent;
 }
 
-.home--liquid-glass-new .sliding-chip-indicator::before {
+.home--liquid-glass-new .sliding-chip-indicator::before,
+.promotions-page--liquid-glass-new .sliding-chip-indicator::before {
   background-color: var(--tokens-background-background-on-color-dark);
   background-image:
     radial-gradient(120% 130% at 18% 0%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.04) 38%, rgba(255, 255, 255, 0) 100%),
@@ -362,7 +405,8 @@ img {
   z-index: 1;
 }
 
-.home--liquid-glass-new .sliding-chip-indicator::after {
+.home--liquid-glass-new .sliding-chip-indicator::after,
+.promotions-page--liquid-glass-new .sliding-chip-indicator::after {
   content: '';
   position: absolute;
   inset: 1px;
@@ -374,7 +418,8 @@ img {
     radial-gradient(90% 120% at 12% 0%, rgba(255, 255, 255, 0.16), transparent 62%);
 }
 
-.home--v2 .sliding-chip-indicator {
+.home--v2 .sliding-chip-indicator,
+.promotions-page--v2 .sliding-chip-indicator {
   --sliding-chip-v2-active-start: var(--tokens-border-border-gradient-02);
   --sliding-chip-v2-active-start-rgb: var(--tokens-border-border-gradient-02-rgb);
   --sliding-chip-v2-active-end: var(--tokens-border-border-gradient-01);
@@ -391,15 +436,17 @@ img {
   box-sizing: border-box;
 }
 
-:root[data-theme="light"] .home--v2 .sliding-chip-indicator {
+:root[data-theme="light"] .home--v2 .sliding-chip-indicator,
+:root[data-theme="light"] .promotions-page--v2 .sliding-chip-indicator {
   --sliding-chip-v2-active-start: var(--primitives-brand-violet-brand-violet-300);
   --sliding-chip-v2-active-start-rgb: var(--primitives-brand-violet-brand-violet-300-rgb);
   --sliding-chip-v2-active-end: var(--primitives-brand-purple-brand-purple-300);
   --sliding-chip-v2-active-end-rgb: var(--primitives-brand-purple-brand-purple-300-rgb);
   --sliding-chip-v2-active-fill-start-rgb: var(--tokens-border-border-gradient-02-rgb);
   --sliding-chip-v2-active-fill-end-rgb: var(--tokens-border-border-gradient-01-rgb);
-  --sliding-chip-v2-active-base: transparent;
-  --sliding-chip-v2-active-fill-opacity: 0.74;
+  --sliding-chip-v2-active-base: var(--tokens-layer-layer-01);
+  --sliding-chip-v2-active-fill-opacity: 0.32;
+  --sliding-chip-v2-active-inset: 1px;
 }
 
 .home--v2 #section-aovivo .live-section__chips:not(.live-section__chips--sticky) .sliding-chip-indicator,
@@ -412,8 +459,9 @@ img {
   --sliding-chip-v2-active-fill-end-rgb: var(--tokens-layer-layer-gradient-06-rgb);
 }
 
-.home--v2 .sliding-chip-indicator::before {
-  inset: 1px;
+.home--v2 .sliding-chip-indicator::before,
+.promotions-page--v2 .sliding-chip-indicator::before {
+  inset: var(--sliding-chip-v2-active-inset, 1px);
   z-index: 0;
   background:
     linear-gradient(
@@ -425,14 +473,26 @@ img {
   box-shadow: none;
 }
 
-.home--v2 .sliding-chip-indicator::after {
+.home--v2 .sliding-chip-indicator::after,
+.promotions-page--v2 .sliding-chip-indicator::after {
   content: none;
 }
 
-.home--v2 .sliding-chip > * {
+.home--v2 .sliding-chip > *,
+.promotions-page--v2 .sliding-chip > * {
   z-index: 2;
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
+}
+
+:root[data-theme="light"] :is(
+  .home--v2 .live-section__chip--active span,
+  .home--v2 .prematch-section__chip--active span,
+  .home--v2 .prematch-section__chip--market.prematch-section__chip--active span,
+  .home--v2 .offers-section__chip--active span,
+  .promotions-page--v2 .promotions-page__filter-chip--active
+) {
+  color: var(--tokens-text-text-01);
 }
 
 .home--v2 :is(
@@ -473,15 +533,18 @@ img {
     sliding-chip-liquid-toggle-bubble 520ms ease;
 }
 
-.home--liquid-glass-new .sliding-chip-group--indicator-switching .sliding-chip-indicator::after {
+.home--liquid-glass-new .sliding-chip-group--indicator-switching .sliding-chip-indicator::after,
+.promotions-page--liquid-glass-new .sliding-chip-group--indicator-switching .sliding-chip-indicator::after {
   animation: sliding-chip-liquid-toggle-shimmer 520ms ease;
 }
 
-.home--v2 .sliding-chip-group--indicator-switching .sliding-chip-indicator::before {
+.home--v2 .sliding-chip-group--indicator-switching .sliding-chip-indicator::before,
+.promotions-page--v2 .sliding-chip-group--indicator-switching .sliding-chip-indicator::before {
   animation: none;
 }
 
-.home--v2 .sliding-chip-group--indicator-switching .sliding-chip-indicator::after {
+.home--v2 .sliding-chip-group--indicator-switching .sliding-chip-indicator::after,
+.promotions-page--v2 .sliding-chip-group--indicator-switching .sliding-chip-indicator::after {
   animation: none;
 }
 

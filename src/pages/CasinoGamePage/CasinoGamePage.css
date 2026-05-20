@@ -511,6 +511,11 @@
   pointer-events: none;
 }
 
+.casino-game-page__info-panel.header--gradient-v3::before,
+.casino-game-page__info-panel.header--gradient-v3::after {
+  display: none;
+}
+
 .casino-game-page__info-panel > * {
   position: relative;
   z-index: 1;

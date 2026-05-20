@@ -671,7 +671,10 @@ function CasinoGameContent({
     >
       <div className="casino-game-page__info-stage">
         <div className="casino-game-page__compact-view">
-          <div className="casino-game-page__info-panel">
+          <div className="casino-game-page__info-panel header--gradient-v3">
+            <div className="header__bg-light" aria-hidden="true" />
+            <div className="header__bg-dark" aria-hidden="true" />
+            <div className="header__bg-gradient" aria-hidden="true" />
             <button
               type="button"
               className="casino-game-page__top-close-area"

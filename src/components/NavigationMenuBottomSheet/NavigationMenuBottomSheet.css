@@ -378,9 +378,35 @@
 }
 
 .navigation-menu-bs__cash-icon {
+  position: relative;
+  display: inline-flex;
   width: 22px;
   height: 22px;
   flex: 0 0 22px;
+  align-items: center;
+  justify-content: center;
+}
+
+.navigation-menu-bs__cash-icon-dollar {
+  width: 22px;
+  height: 22px;
+}
+
+.navigation-menu-bs__cash-icon-arrow {
+  position: absolute;
+  right: -2px;
+  bottom: -1px;
+  width: 10px;
+  height: 10px;
+  padding: 1px;
+  border-radius: 999px;
+  background: var(--tokens-text-text-01);
+  color: var(--tokens-background-background);
+}
+
+.navigation-menu-bs__cash-button--deposit .navigation-menu-bs__cash-icon-arrow {
+  background: var(--tokens-text-text-on-color-white);
+  color: var(--tokens-button-button-primary-gradient-02);
 }
 
 .navigation-menu-bs__rewards {

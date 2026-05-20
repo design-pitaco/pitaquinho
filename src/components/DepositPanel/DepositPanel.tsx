@@ -434,7 +434,8 @@ export function DepositPanel({ isOpen, onClose }: DepositPanelProps) {
         aria-label="Depositar"
         onClick={(event) => event.stopPropagation()}
       >
-        <header className="deposit-panel__header">
+        <header className="deposit-panel__header header--gradient-v3">
+          <div className="header__bg-light" aria-hidden="true" />
           <div className="header__bg-dark" aria-hidden="true" />
           <div className="header__bg-gradient" aria-hidden="true" />
           <button type="button" className="deposit-panel__back" aria-label="Voltar" onClick={requestClose}>

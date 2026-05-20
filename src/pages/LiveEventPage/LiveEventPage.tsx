@@ -1995,6 +1995,7 @@ function LiveEventContent({
       <div
         className={[
           'live-event-page__sticky-score-header',
+          'header--gradient-v3',
           isLiveMatch ? '' : 'live-event-page__sticky-score-header--prematch',
           isStickyScoreHeaderVisible ? 'live-event-page__sticky-score-header--visible' : '',
         ].filter(Boolean).join(' ')}
@@ -2004,6 +2005,9 @@ function LiveEventContent({
         onPointerUp={handleStickyCollapsePointerUp}
         onPointerCancel={handleStickyCollapsePointerCancel}
       >
+        <div className="header__bg-light" aria-hidden="true" />
+        <div className="header__bg-dark" aria-hidden="true" />
+        <div className="header__bg-gradient" aria-hidden="true" />
         <span className="live-event-page__sticky-collapse-handle" aria-hidden="true">
           <span />
         </span>
@@ -2060,26 +2064,29 @@ function LiveEventContent({
         onScroll={handleContentScroll}
         onWheel={handleContentWheel}
       >
-        <div className="live-event-page__scroll-body">
-        <button
-          type="button"
-          className="live-event-page__top-close-area"
-          aria-label="Fechar evento"
-          onClick={handleTopAreaClick}
-        >
-          <span
-            className="live-event-page__drag-handle"
-            onClick={(event) => event.stopPropagation()}
-            onPointerDown={handleCloseHandlePointerDown}
-            onPointerUp={handleCloseHandlePointerUp}
-            onPointerCancel={handleCloseHandlePointerCancel}
+        <div className="live-event-page__scroll-body header--gradient-v3">
+          <div className="header__bg-light" aria-hidden="true" />
+          <div className="header__bg-dark" aria-hidden="true" />
+          <div className="header__bg-gradient" aria-hidden="true" />
+          <button
+            type="button"
+            className="live-event-page__top-close-area"
+            aria-label="Fechar evento"
+            onClick={handleTopAreaClick}
           >
-            <span />
-          </span>
-        </button>
+            <span
+              className="live-event-page__drag-handle"
+              onClick={(event) => event.stopPropagation()}
+              onPointerDown={handleCloseHandlePointerDown}
+              onPointerUp={handleCloseHandlePointerUp}
+              onPointerCancel={handleCloseHandlePointerCancel}
+            >
+              <span />
+            </span>
+          </button>
 
-        {/* ── Match card ── */}
-        <div className={`live-event-page__match-card${isLiveMatch ? '' : ' live-event-page__match-card--prematch'}`}>
+          {/* ── Match card ── */}
+          <div className={`live-event-page__match-card${isLiveMatch ? '' : ' live-event-page__match-card--prematch'}`}>
 
           {/* League name */}
           <span className="live-event-page__league-name">{leagueName}</span>
@@ -2696,7 +2703,7 @@ const MemoLiveEventContent = memo(LiveEventContent, (previous, next) => (
   && previous.expansionProgress === next.expansionProgress
 ))
 
-const LIVE_EVENT_COMPACT_SIDE_MARGIN = 24
+const LIVE_EVENT_COMPACT_SIDE_MARGIN = 0
 const LIVE_EVENT_COMPACT_TOP = 106
 const LIVE_EVENT_TRANSITION_MS = 360
 const LIVE_EVENT_CONTENT_SWITCH_MS = 380
@@ -2764,7 +2771,7 @@ function measureSheetMetrics(): SheetMetrics {
     return {
       viewportWidth: 390,
       viewportHeight: 844,
-      compactScale: 342 / 390,
+      compactScale: 1,
     }
   }
 

@@ -582,6 +582,7 @@
   --sport-rail-v2-active-end-rgb: var(--tokens-border-border-gradient-01-rgb);
   --sport-rail-v2-active-fill-start-rgb: var(--tokens-border-border-gradient-02-rgb);
   --sport-rail-v2-active-fill-end-rgb: var(--tokens-border-border-gradient-01-rgb);
+  --sport-rail-v2-active-base: transparent;
   --sport-rail-v2-active-fill-opacity: 0.24;
   margin-top: 0;
   padding-top: 0;
@@ -597,7 +598,8 @@
     90deg,
     rgb(var(--sport-rail-v2-active-fill-start-rgb) / var(--sport-rail-v2-active-fill-opacity)) 0%,
     rgb(var(--sport-rail-v2-active-fill-end-rgb) / var(--sport-rail-v2-active-fill-opacity)) 100%
-  );
+  ),
+  var(--sport-rail-v2-active-base);
   border: 0;
   box-shadow: none;
   transform: scale3d(1, 1, 1);
@@ -627,13 +629,14 @@
 }
 
 :root[data-theme="light"] .header--v2 .sport-rail--competitions {
-  --sport-rail-v2-active-start: var(--primitives-brand-violet-brand-violet-300);
-  --sport-rail-v2-active-start-rgb: var(--primitives-brand-violet-brand-violet-300-rgb);
-  --sport-rail-v2-active-end: var(--primitives-brand-purple-brand-purple-300);
-  --sport-rail-v2-active-end-rgb: var(--primitives-brand-purple-brand-purple-300-rgb);
+  --sport-rail-v2-active-start: var(--primitives-brand-violet-brand-violet-400);
+  --sport-rail-v2-active-start-rgb: var(--primitives-brand-violet-brand-violet-400-rgb);
+  --sport-rail-v2-active-end: var(--primitives-brand-purple-brand-purple-400);
+  --sport-rail-v2-active-end-rgb: var(--primitives-brand-purple-brand-purple-400-rgb);
   --sport-rail-v2-active-fill-start-rgb: var(--tokens-border-border-gradient-02-rgb);
   --sport-rail-v2-active-fill-end-rgb: var(--tokens-border-border-gradient-01-rgb);
-  --sport-rail-v2-active-fill-opacity: 0.74;
+  --sport-rail-v2-active-base: var(--tokens-layer-layer-01);
+  --sport-rail-v2-active-fill-opacity: 0.56;
 }
 
 .header--v2 .sport-rail--competitions .sport-rail__icon:not(.sport-rail__icon--active) {
@@ -656,7 +659,7 @@
 
 .header--v2 .sport-rail--competitions .sport-rail__label {
   color: var(--tokens-text-text-on-color-white);
-  font-weight: 400;
+  font-weight: 500;
   line-height: 1.2;
 }
 

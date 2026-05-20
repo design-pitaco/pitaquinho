@@ -237,6 +237,7 @@ export function HeaderV2({
       className={[
         'header',
         'header--v2',
+        'header--gradient-v3',
         isSportPage ? 'header--sport-active' : 'header--competition-rail',
         'header--liquid-glass',
         'header--liquid-glass-new',
@@ -246,6 +247,7 @@ export function HeaderV2({
         .filter(Boolean)
         .join(' ')}
     >
+      <div className="header__bg-light" />
       <div className="header__bg-dark" />
       <div className="header__bg-gradient" />
 

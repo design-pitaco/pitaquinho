@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
+  ArrowDownIcon,
+  ArrowUpIcon,
   ArrowsClockwiseIcon,
   BellIcon,
   CaretRightIcon,
@@ -13,7 +15,6 @@ import {
   GiftIcon,
   GearIcon,
   HeadsetIcon,
-  MoneyIcon,
   MoonIcon,
   PokerChipIcon,
   ScrollIcon,
@@ -392,7 +393,10 @@ export function NavigationMenuBottomSheet({ isOpen, onDepositOpen, onClose }: Na
 
               <div className="navigation-menu-bs__balance-actions">
                 <button type="button" className="navigation-menu-bs__cash-button navigation-menu-bs__cash-button--withdraw">
-                  <MoneyIcon aria-hidden="true" className="navigation-menu-bs__cash-icon" weight="bold" />
+                  <span className="navigation-menu-bs__cash-icon" aria-hidden="true">
+                    <CurrencyCircleDollarIcon className="navigation-menu-bs__cash-icon-dollar" weight="bold" />
+                    <ArrowDownIcon className="navigation-menu-bs__cash-icon-arrow" weight="bold" />
+                  </span>
                   Sacar
                 </button>
                 <button
@@ -400,7 +404,10 @@ export function NavigationMenuBottomSheet({ isOpen, onDepositOpen, onClose }: Na
                   className="navigation-menu-bs__cash-button navigation-menu-bs__cash-button--deposit"
                   onClick={handleDepositOpen}
                 >
-                  <CurrencyCircleDollarIcon aria-hidden="true" className="navigation-menu-bs__cash-icon" weight="bold" />
+                  <span className="navigation-menu-bs__cash-icon" aria-hidden="true">
+                    <CurrencyCircleDollarIcon className="navigation-menu-bs__cash-icon-dollar" weight="bold" />
+                    <ArrowUpIcon className="navigation-menu-bs__cash-icon-arrow" weight="bold" />
+                  </span>
                   Depositar
                 </button>
               </div>

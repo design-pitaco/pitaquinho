@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type ComponentType, type ReactNode } from 'react'
 import { HeaderV2 } from '../../components/HeaderV2'
-import { setSlidingActiveIndicator, useSlidingActiveIndicator } from '../../hooks/useSlidingActiveIndicator'
+import { useSlidingActiveIndicator } from '../../hooks/useSlidingActiveIndicator'
 import type { ProductMode } from '../../types/home'
 import { PromotionsMissionsSection } from './PromotionsMissionsSection'
 import './PromotionsPage.css'
@@ -94,39 +94,6 @@ export function PromotionsPage({
     containerRef: filtersRef,
     getActiveElement: () => filterRefs.current[activeFilter],
   })
-
-  useLayoutEffect(() => {
-    const containerEl = filtersRef.current
-    if (!containerEl) return
-
-    let frame: number | null = null
-    let removeInstantFrame: number | null = null
-    const stopAt = window.performance.now() + 220
-
-    const syncIndicator = () => {
-      containerEl.classList.add('sliding-chip-group--indicator-instant')
-      setSlidingActiveIndicator(containerEl, filterRefs.current[activeFilter])
-
-      if (window.performance.now() < stopAt) {
-        frame = window.requestAnimationFrame(syncIndicator)
-        return
-      }
-
-      frame = null
-      removeInstantFrame = window.requestAnimationFrame(() => {
-        containerEl.classList.remove('sliding-chip-group--indicator-instant')
-        removeInstantFrame = null
-      })
-    }
-
-    syncIndicator()
-
-    return () => {
-      if (frame !== null) window.cancelAnimationFrame(frame)
-      if (removeInstantFrame !== null) window.cancelAnimationFrame(removeInstantFrame)
-      containerEl.classList.remove('sliding-chip-group--indicator-instant')
-    }
-  }, [activeFilter, isHeaderCompact])
 
   useLayoutEffect(() => {
     const trackEl = tabsTrackRef.current

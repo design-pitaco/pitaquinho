@@ -65,7 +65,6 @@ export function useSlidingActiveIndicator({
 }: UseSlidingActiveIndicatorOptions) {
   const getActiveElementRef = useRef(getActiveElement)
   const previousActiveKeyRef = useRef(activeKey)
-  const instantFrameRef = useRef<number | null>(null)
   const switchingFrameRef = useRef<number | null>(null)
   const switchingResetTimerRef = useRef<number | null>(null)
   const switchingTargetRef = useRef<{ element: HTMLElement; className: string } | null>(null)
@@ -109,11 +108,6 @@ export function useSlidingActiveIndicator({
     const previousActiveKey = previousActiveKeyRef.current
     const isLayoutRefresh = previousActiveKey === activeKey
 
-    if (instantFrameRef.current !== null) {
-      window.cancelAnimationFrame(instantFrameRef.current)
-      instantFrameRef.current = null
-    }
-
     if (containerEl && isLayoutRefresh) {
       containerEl.classList.add('sliding-chip-group--indicator-instant')
     }
@@ -128,10 +122,8 @@ export function useSlidingActiveIndicator({
     previousActiveKeyRef.current = activeKey
 
     if (containerEl && isLayoutRefresh) {
-      instantFrameRef.current = window.requestAnimationFrame(() => {
-        containerEl.classList.remove('sliding-chip-group--indicator-instant')
-        instantFrameRef.current = null
-      })
+      void containerEl.offsetWidth
+      containerEl.classList.remove('sliding-chip-group--indicator-instant')
     }
 
     if (
@@ -183,10 +175,6 @@ export function useSlidingActiveIndicator({
   ])
 
   useEffect(() => () => {
-    if (instantFrameRef.current !== null) {
-      window.cancelAnimationFrame(instantFrameRef.current)
-      instantFrameRef.current = null
-    }
     clearSwitchingMotion()
   }, [clearSwitchingMotion])
 

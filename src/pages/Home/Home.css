@@ -90,6 +90,10 @@
   top: 100px;
 }
 
+.home .header--gradient-v3::after {
+  display: none;
+}
+
 .home--header-morph-active {
   padding-top: var(--home-header-content-padding-top, 194px);
   transition: none;
@@ -204,6 +208,27 @@
 :root[data-theme="light"] .home[data-market-sticky-rail-protection="true"] .header,
 :root[data-theme="light"] .home[data-market-sticky-rail-clipped="true"] .header {
   --header-gradient-height: var(--home-sticky-header-gradient-height, 250px);
+}
+
+:root[data-theme="dark"] .home:is(
+  [data-market-sticky-engaged="true"],
+  [data-market-sticky-rail-protection="true"],
+  [data-market-sticky-rail-clipped="true"]
+) .header--gradient-v3 .header__bg-dark,
+:root[data-theme="light"] .home:is(
+  [data-market-sticky-engaged="true"],
+  [data-market-sticky-rail-protection="true"],
+  [data-market-sticky-rail-clipped="true"]
+) .header--gradient-v3 .header__bg-dark {
+  height: 209px !important;
+}
+
+:root[data-theme="light"] .home:is(
+  [data-market-sticky-engaged="true"],
+  [data-market-sticky-rail-protection="true"],
+  [data-market-sticky-rail-clipped="true"]
+) .header--gradient-v3 .header__bg-light {
+  height: 209px !important;
 }
 
 /* Home sem dividers */

@@ -553,7 +553,7 @@
 
 .deposit-panel__pix-title-row h3 {
   margin: 0;
-  color: var(--tokens-text-text-on-color-white);
+  color: var(--tokens-text-text-01);
   font-size: 14px;
   font-weight: 700;
   line-height: 1.5;
