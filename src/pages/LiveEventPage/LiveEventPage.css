@@ -726,6 +726,19 @@
   pointer-events: auto;
 }
 
+:root[data-live-event-betslip-visible] .live-event-page__scroll {
+  --live-event-betslip-bottom-padding: calc(
+    (
+      var(--betslip-compact-height)
+      + var(--navbar-bottom-offset)
+      + var(--navbar-content-gap)
+      + 2px
+    ) / var(--live-event-sheet-scale, 1)
+  );
+  padding-bottom: var(--live-event-betslip-bottom-padding);
+  scroll-padding-bottom: var(--live-event-betslip-bottom-padding);
+}
+
 .live-event-page__scroll::-webkit-scrollbar {
   display: none;
 }

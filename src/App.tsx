@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Home } from './pages/Home'
 import { PromotionsPage } from './pages/PromotionsPage'
 import { BetslipPage } from './pages/BetslipPage'
+import { HandoffPage } from './pages/Handoff'
 import { MobileOnly } from './components/MobileOnly'
 import { Navbar } from './components/Navbar'
 import { Betslip } from './components/Betslip'
@@ -13,6 +14,7 @@ import type { ProductMode } from './types/home'
 const defaultProduct: ProductMode = 'apostas'
 const productRoutes: ProductMode[] = ['apostas', 'cassino']
 const promotionsRouteSegment = 'promocoes'
+const handoffRouteSegment = 'handoff'
 const deployedBasePath = '/pitaquinho'
 
 const getBasePath = () => {
@@ -47,6 +49,12 @@ const isPromotionsPath = (pathname: string) => {
   )
 }
 
+const isHandoffPath = (pathname: string) => {
+  const routeSegments = getRouteSegments(pathname)
+
+  return routeSegments.length === 1 && routeSegments[0] === handoffRouteSegment
+}
+
 const isCanonicalPromotionsPath = (pathname: string) => {
   const routeSegments = getRouteSegments(pathname)
   return routeSegments.length === 1 && routeSegments[0] === promotionsRouteSegment
@@ -79,6 +87,7 @@ function AppContent() {
   const { summary: betslipSummary } = useBetslip()
   const productRoute = useMemo(() => resolveProductFromPath(pathname), [pathname])
   const isPromotionsPage = useMemo(() => isPromotionsPath(pathname), [pathname])
+  const isHandoffPage = useMemo(() => isHandoffPath(pathname), [pathname])
   const [promotionsProduct, setPromotionsProduct] = useState<ProductMode>(() => productRoute.product)
   const [isFullBetslipOpen, setIsFullBetslipOpen] = useState(false)
   const [liveEventUi, setLiveEventUi] = useState({
@@ -90,6 +99,7 @@ function AppContent() {
 
   useEffect(() => {
     if (isPromotionsPage) return
+    if (isHandoffPage) return
     if (productRoute.isCanonicalProductRoute) return
 
     const nextPath = buildProductPath(productRoute.product)
@@ -99,7 +109,7 @@ function AppContent() {
     }, 0)
 
     return () => window.clearTimeout(timer)
-  }, [isPromotionsPage, productRoute])
+  }, [isHandoffPage, isPromotionsPage, productRoute])
 
   useEffect(() => {
     if (!isPromotionsPage) return
@@ -220,13 +230,27 @@ function AppContent() {
     })
   }, [])
 
-  const showCompactBetslip = activeProduct === 'apostas' && !isPromotionsPage && betslipSummary.hasSelections
+  const showCompactBetslip = activeProduct === 'apostas' && !isPromotionsPage && !isHandoffPage && betslipSummary.hasSelections
   const shouldShowEventBetslip = showCompactBetslip && liveEventUi.isOpen && liveEventUi.isEventBetslipVisible
+
+  useEffect(() => {
+    document.documentElement.toggleAttribute('data-betslip-compact-visible', showCompactBetslip)
+    document.documentElement.toggleAttribute('data-live-event-betslip-visible', shouldShowEventBetslip)
+  }, [showCompactBetslip, shouldShowEventBetslip])
+
+  useEffect(() => {
+    return () => {
+      document.documentElement.removeAttribute('data-betslip-compact-visible')
+      document.documentElement.removeAttribute('data-live-event-betslip-visible')
+    }
+  }, [])
 
   return (
     <div className="app-shell">
-      <MobileOnly />
-      {isPromotionsPage ? (
+      {!isHandoffPage ? <MobileOnly /> : null}
+      {isHandoffPage ? (
+        <HandoffPage homePath={buildProductPath(defaultProduct)} />
+      ) : isPromotionsPage ? (
         <PromotionsPage
           activeProduct={activeProduct}
           HeaderComponent={HeaderV2}
@@ -242,27 +266,31 @@ function AppContent() {
           onLiveEventCloseStart={handleLiveEventCloseStart}
         />
       )}
-      {isFullBetslipOpen ? (
+      {!isHandoffPage && isFullBetslipOpen ? (
         <BetslipPage onClose={handleBetslipClose} />
       ) : null}
-      <Betslip
-        visible={showCompactBetslip}
-        summary={betslipSummary}
-        presentationKey="base"
-        onOpen={handleBetslipOpen}
-      />
-      <Betslip
-        visible={shouldShowEventBetslip}
-        summary={betslipSummary}
-        compactOnly={true}
-        presentationKey={`live-event-${liveEventUi.betslipMotionKey}`}
-        onOpen={handleBetslipOpen}
-      />
-      <Navbar
-        activeProduct={activeProduct}
-        activeItemId={isPromotionsPage ? promotionsRouteSegment : undefined}
-        onItemSelect={handleNavbarItemSelect}
-      />
+      {!isHandoffPage ? (
+        <>
+          <Betslip
+            visible={showCompactBetslip}
+            summary={betslipSummary}
+            presentationKey="base"
+            onOpen={handleBetslipOpen}
+          />
+          <Betslip
+            visible={shouldShowEventBetslip}
+            summary={betslipSummary}
+            compactOnly={true}
+            presentationKey={`live-event-${liveEventUi.betslipMotionKey}`}
+            onOpen={handleBetslipOpen}
+          />
+          <Navbar
+            activeProduct={activeProduct}
+            activeItemId={isPromotionsPage ? promotionsRouteSegment : undefined}
+            onItemSelect={handleNavbarItemSelect}
+          />
+        </>
+      ) : null}
     </div>
   )
 }

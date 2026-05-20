@@ -8,6 +8,17 @@
   --navbar-bottom-offset: max(4px, calc(env(safe-area-inset-bottom, 0px) / 2));
   --navbar-content-gap: 24px;
   --navbar-page-bottom-padding: calc(var(--navbar-height) + var(--navbar-bottom-offset) + var(--navbar-content-gap));
+  --betslip-page-bottom-padding: calc(
+    var(--navbar-height)
+    + var(--navbar-bottom-offset)
+    + var(--betslip-compact-height)
+    + var(--navbar-content-gap)
+  );
+  --live-event-betslip-bottom-padding: calc(
+    var(--betslip-compact-height)
+    + var(--navbar-bottom-offset)
+    + var(--navbar-content-gap)
+  );
 
   /* Tipografia */
   font-family: 'Red Hat Text', system-ui, sans-serif;

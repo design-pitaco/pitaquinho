@@ -222,6 +222,11 @@
     scroll-padding-bottom: var(--navbar-page-bottom-padding);
   }
 
+  :root[data-betslip-compact-visible] .home {
+    padding-bottom: var(--betslip-page-bottom-padding);
+    scroll-padding-bottom: var(--betslip-page-bottom-padding);
+  }
+
   .home
     > :is(
       .trilho-e-banner,
