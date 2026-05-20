@@ -12,6 +12,7 @@ interface HeaderComponentProps {
   activeProduct?: ProductMode
   changeProductOnPointerDown?: boolean
   onProductChange?: (product: ProductMode) => void
+  onDepositOpen?: () => void
   children?: ReactNode
 }
 
@@ -19,6 +20,7 @@ interface PromotionsPageProps {
   activeProduct?: ProductMode
   HeaderComponent?: ComponentType<HeaderComponentProps>
   onProductChange?: (product: ProductMode) => void
+  onDepositOpen?: () => void
 }
 
 const HEADER_COMPACT_SCROLL_TOP = 28
@@ -53,6 +55,7 @@ export function PromotionsPage({
   activeProduct = 'apostas',
   HeaderComponent = HeaderV2,
   onProductChange,
+  onDepositOpen,
 }: PromotionsPageProps = {}) {
   const pageRef = useRef<HTMLDivElement>(null)
   const tabsTrackRef = useRef<HTMLDivElement>(null)
@@ -268,6 +271,7 @@ export function PromotionsPage({
       <HeaderComponent
         activeProduct={activeProduct}
         changeProductOnPointerDown={false}
+        onDepositOpen={onDepositOpen}
         onProductChange={onProductChange}
       >
         <nav className="promotions-page__tabs" aria-label="Seções de promoções">

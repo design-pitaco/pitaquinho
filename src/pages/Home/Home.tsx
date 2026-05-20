@@ -71,6 +71,7 @@ interface HeaderComponentProps {
   activeSport?: string | null
   rail?: ReactNode
   onProductChange?: (product: ProductMode) => void
+  onDepositOpen?: () => void
   children?: ReactNode
 }
 
@@ -78,6 +79,7 @@ interface HomeProps {
   activeProduct?: ProductMode
   HeaderComponent?: ComponentType<HeaderComponentProps>
   onProductChange?: (product: ProductMode) => void
+  onDepositOpen?: () => void
   onLiveEventOpenChange?: (isOpen: boolean) => void
   onLiveEventOpenSettled?: () => void
   onLiveEventCloseStart?: () => void
@@ -87,6 +89,7 @@ export function Home({
   activeProduct = 'apostas',
   HeaderComponent = HeaderV2,
   onProductChange,
+  onDepositOpen,
   onLiveEventOpenChange,
   onLiveEventOpenSettled,
   onLiveEventCloseStart,
@@ -735,6 +738,7 @@ export function Home({
       <HeaderComponent
         activeProduct={activeProduct}
         activeSport={displayActiveSport}
+        onDepositOpen={onDepositOpen}
         onProductChange={onProductChange}
         rail={headerRail}
       >

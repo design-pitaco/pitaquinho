@@ -14,6 +14,7 @@ interface HeaderV2Props {
   showMenuButton?: boolean
   changeProductOnPointerDown?: boolean
   onProductChange?: (product: ProductMode) => void
+  onDepositOpen?: () => void
   children?: ReactNode
 }
 
@@ -29,6 +30,7 @@ export function HeaderV2({
   showMenuButton = true,
   changeProductOnPointerDown = true,
   onProductChange,
+  onDepositOpen,
   children,
 }: HeaderV2Props = {}) {
   const isSportPage = !!activeSport && activeSport !== 'destaques'
@@ -41,7 +43,7 @@ export function HeaderV2({
   const headerTopRef = useRef<HTMLDivElement>(null)
   const toggleRef = useRef<HTMLButtonElement>(null)
   const accountActionsRef = useRef<HTMLDivElement>(null)
-  const balanceRef = useRef<HTMLDivElement>(null)
+  const balanceRef = useRef<HTMLButtonElement>(null)
   const balanceLabelRef = useRef<HTMLSpanElement>(null)
   const balanceValueRef = useRef<HTMLSpanElement>(null)
   const balanceMeasureRefs = useRef<(HTMLSpanElement | null)[]>([])
@@ -285,7 +287,13 @@ export function HeaderV2({
           ref={accountActionsRef}
           style={{ width: `${accountActionsWidth}px` }}
         >
-          <div className="header__balance" aria-label={`Saldo disponível: ${balanceDisplayOptions[0]}`} ref={balanceRef}>
+          <button
+            type="button"
+            className="header__balance"
+            aria-label={`Abrir depósito. Saldo disponível: ${balanceDisplayOptions[0]}`}
+            ref={balanceRef}
+            onClick={onDepositOpen}
+          >
             <span className="header__balance-label" ref={balanceLabelRef}>Saldo</span>
             <span className="header__balance-value" ref={balanceValueRef}>{balanceDisplayValue}</span>
             <span className="header__balance-measure" aria-hidden="true">
@@ -299,7 +307,7 @@ export function HeaderV2({
                 </span>
               ))}
             </span>
-          </div>
+          </button>
           {showMenuButton && (
             <button
               type="button"
@@ -319,6 +327,7 @@ export function HeaderV2({
       {showMenuButton && (
         <NavigationMenuBottomSheet
           isOpen={isNavigationMenuOpen}
+          onDepositOpen={onDepositOpen}
           onClose={() => setIsNavigationMenuOpen(false)}
         />
       )}

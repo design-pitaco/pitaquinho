@@ -7,6 +7,7 @@ import { MobileOnly } from './components/MobileOnly'
 import { Navbar } from './components/Navbar'
 import { Betslip } from './components/Betslip'
 import { HeaderV2 } from './components/HeaderV2'
+import { DepositPanel } from './components/DepositPanel'
 import { BetslipProvider } from './hooks/BetslipProvider'
 import { useBetslip } from './hooks/useBetslip'
 import type { ProductMode } from './types/home'
@@ -90,6 +91,7 @@ function AppContent() {
   const isHandoffPage = useMemo(() => isHandoffPath(pathname), [pathname])
   const [promotionsProduct, setPromotionsProduct] = useState<ProductMode>(() => productRoute.product)
   const [isFullBetslipOpen, setIsFullBetslipOpen] = useState(false)
+  const [isDepositPanelOpen, setIsDepositPanelOpen] = useState(false)
   const [liveEventUi, setLiveEventUi] = useState({
     isOpen: false,
     isEventBetslipVisible: false,
@@ -187,6 +189,14 @@ function AppContent() {
     setIsFullBetslipOpen(true)
   }, [])
 
+  const handleDepositPanelOpen = useCallback(() => {
+    setIsDepositPanelOpen(true)
+  }, [])
+
+  const handleDepositPanelClose = useCallback(() => {
+    setIsDepositPanelOpen(false)
+  }, [])
+
   const handleLiveEventOpenChange = useCallback((isOpen: boolean) => {
     setLiveEventUi((current) => {
       if (current.isOpen === isOpen) return current
@@ -249,17 +259,19 @@ function AppContent() {
     <div className="app-shell">
       {!isHandoffPage ? <MobileOnly /> : null}
       {isHandoffPage ? (
-        <HandoffPage homePath={buildProductPath(defaultProduct)} />
+        <HandoffPage />
       ) : isPromotionsPage ? (
         <PromotionsPage
           activeProduct={activeProduct}
           HeaderComponent={HeaderV2}
+          onDepositOpen={handleDepositPanelOpen}
           onProductChange={handleProductChange}
         />
       ) : (
         <Home
           activeProduct={activeProduct}
           HeaderComponent={HeaderV2}
+          onDepositOpen={handleDepositPanelOpen}
           onProductChange={handleProductChange}
           onLiveEventOpenChange={handleLiveEventOpenChange}
           onLiveEventOpenSettled={handleLiveEventOpenSettled}
@@ -268,6 +280,9 @@ function AppContent() {
       )}
       {!isHandoffPage && isFullBetslipOpen ? (
         <BetslipPage onClose={handleBetslipClose} />
+      ) : null}
+      {!isHandoffPage ? (
+        <DepositPanel isOpen={isDepositPanelOpen} onClose={handleDepositPanelClose} />
       ) : null}
       {!isHandoffPage ? (
         <>

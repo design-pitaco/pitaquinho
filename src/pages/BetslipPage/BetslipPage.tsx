@@ -12,7 +12,6 @@ import {
   type PointerEvent,
 } from 'react'
 import {
-  BackspaceIcon,
   CaretRightIcon,
   CheckIcon,
   FileTextIcon,
@@ -25,6 +24,7 @@ import confetti from 'canvas-confetti'
 import './BetslipPage.css'
 
 import reiAntecipaFutebol from '../../assets/reiAntecipaFutebol.png'
+import { StakeKeyboard, type StakeKeyboardKey } from '../../components/StakeKeyboard'
 import substituicaoGarantida from '../../assets/substituicaoGarantida.png'
 import { getTeamLogo } from '../../data/teamLogos'
 import { useBetslip } from '../../hooks/useBetslip'
@@ -122,21 +122,6 @@ function fireBetslipSuccessConfetti() {
   fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2, ticks: 65 })
   fire(0.1, { spread: 120, startVelocity: 45, ticks: 65 })
 }
-
-const stakeKeyboardKeys = [
-  { key: '1', label: '1', variant: 'wide' },
-  { key: '2', label: '2', variant: 'wide' },
-  { key: '3', label: '3', variant: 'wide' },
-  { key: '4', label: '4', variant: 'wide' },
-  { key: '5', label: '5', variant: 'wide' },
-  { key: '6', label: '6', variant: 'wide' },
-  { key: '7', label: '7', variant: 'wide' },
-  { key: '8', label: '8', variant: 'wide' },
-  { key: '9', label: '9', variant: 'wide' },
-  { key: 'backspace', label: 'Apagar', variant: 'wide' },
-  { key: '0', label: '0', variant: 'wide' },
-  { key: 'ok', label: 'OK', variant: 'wide' },
-] as const
 
 function formatCurrency(cents: number) {
   return `R$${(cents / 100).toLocaleString('pt-BR', {
@@ -1067,7 +1052,7 @@ function BetslipFooter({
     button.classList.add(quickStakeFeedbackClassName)
   }
 
-  const handleKeyboardKey = (key: typeof stakeKeyboardKeys[number]['key']) => {
+  const handleKeyboardKey = (key: StakeKeyboardKey) => {
     if (key === 'ok') {
       if (isStakeKeyboardOpen) onStakeKeyboardOpenChange(false)
       return
@@ -1132,7 +1117,7 @@ function BetslipFooter({
 
   const handleKeyboardPointerDown = (
     event: PointerEvent<HTMLButtonElement>,
-    key: typeof stakeKeyboardKeys[number]['key']
+    key: StakeKeyboardKey
   ) => {
     event.preventDefault()
     handleKeyboardKey(key)
@@ -1140,7 +1125,7 @@ function BetslipFooter({
 
   const handleKeyboardClick = (
     event: MouseEvent<HTMLButtonElement>,
-    key: typeof stakeKeyboardKeys[number]['key']
+    key: StakeKeyboardKey
   ) => {
     if (event.detail === 0) handleKeyboardKey(key)
   }
@@ -1225,26 +1210,12 @@ function BetslipFooter({
         </div>
       ) : null}
 
-      <div
+      <StakeKeyboard
         id="betslip-stake-keyboard"
-        className={`betslip-page__stake-keyboard${isStakeKeyboardOpen ? ' betslip-page__stake-keyboard--open' : ''}`}
-        aria-label="Teclado de valor"
-        aria-hidden={!isStakeKeyboardOpen}
-      >
-        {stakeKeyboardKeys.map((key) => (
-          <button
-            key={key.key}
-            type="button"
-            className={`betslip-page__stake-key betslip-page__stake-key--${key.variant}`}
-            aria-label={key.key === 'backspace' ? 'Apagar valor' : undefined}
-            tabIndex={isStakeKeyboardOpen ? undefined : -1}
-            onPointerDown={(event) => handleKeyboardPointerDown(event, key.key)}
-            onClick={(event) => handleKeyboardClick(event, key.key)}
-          >
-            {key.key === 'backspace' ? <BackspaceIcon aria-hidden="true" weight="bold" /> : key.label}
-          </button>
-        ))}
-      </div>
+        isOpen={isStakeKeyboardOpen}
+        onKeyPointerDown={handleKeyboardPointerDown}
+        onKeyClick={handleKeyboardClick}
+      />
 
       <div className="betslip-page__credit-row">
         <button

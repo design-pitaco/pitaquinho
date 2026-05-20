@@ -36,6 +36,7 @@ import './NavigationMenuBottomSheet.css'
 
 interface NavigationMenuBottomSheetProps {
   isOpen: boolean
+  onDepositOpen?: () => void
   onClose: () => void
 }
 
@@ -67,7 +68,7 @@ const menuSections: MenuSection[] = [
     Icon: TicketIcon,
     items: [
       { label: 'Apostas Ao Vivo' },
-      { label: 'Todos os Esportes' },
+      { label: 'Buscar' },
       { label: 'Minhas Apostas' },
     ],
   },
@@ -75,7 +76,6 @@ const menuSections: MenuSection[] = [
     title: 'Cassino',
     Icon: PokerChipIcon,
     items: [
-      { label: 'Jogos de Cassino' },
       { label: 'Buscar' },
       { label: 'Jogos Frequentes' },
       { label: 'Meu Histórico' },
@@ -141,7 +141,7 @@ const themePreferenceOptions: { label: string; value: ThemePreference; Icon: Ico
   { label: 'Sistema', value: 'system', Icon: CircleHalfIcon },
 ]
 
-export function NavigationMenuBottomSheet({ isOpen, onClose }: NavigationMenuBottomSheetProps) {
+export function NavigationMenuBottomSheet({ isOpen, onDepositOpen, onClose }: NavigationMenuBottomSheetProps) {
   const [shouldRender, setShouldRender] = useState(false)
   const [motionState, setMotionState] = useState<SheetMotionState>('entering')
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -181,6 +181,10 @@ export function NavigationMenuBottomSheet({ isOpen, onClose }: NavigationMenuBot
     if (motionState === 'closing') return
     onClose()
   }, [motionState, onClose])
+
+  const handleDepositOpen = useCallback(() => {
+    onDepositOpen?.()
+  }, [onDepositOpen])
 
   const toggleSection = useCallback((title: string) => {
     setExpandedSections((current) => ({
@@ -391,7 +395,11 @@ export function NavigationMenuBottomSheet({ isOpen, onClose }: NavigationMenuBot
                   <MoneyIcon aria-hidden="true" className="navigation-menu-bs__cash-icon" weight="bold" />
                   Sacar
                 </button>
-                <button type="button" className="navigation-menu-bs__cash-button navigation-menu-bs__cash-button--deposit">
+                <button
+                  type="button"
+                  className="navigation-menu-bs__cash-button navigation-menu-bs__cash-button--deposit"
+                  onClick={handleDepositOpen}
+                >
                   <CurrencyCircleDollarIcon aria-hidden="true" className="navigation-menu-bs__cash-icon" weight="bold" />
                   Depositar
                 </button>
