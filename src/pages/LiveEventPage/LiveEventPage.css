@@ -730,7 +730,7 @@
   --live-event-betslip-bottom-padding: calc(
     (
       var(--betslip-compact-height)
-      + var(--navbar-bottom-offset)
+      + var(--spacing-12)
       + var(--navbar-content-gap)
       + 2px
     ) / var(--live-event-sheet-scale, 1)

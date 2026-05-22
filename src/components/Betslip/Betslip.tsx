@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState, type AnimationEvent } from 'react'
-import { CaretUpIcon } from '@phosphor-icons/react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type TransitionEvent } from 'react'
+import { CaretRightIcon } from '@phosphor-icons/react'
 import './Betslip.css'
 
 import {
@@ -29,7 +29,15 @@ export function Betslip({
   const shouldShow = visible && !!summary
   const [isRendered, setIsRendered] = useState(shouldShow)
   const [isPresented, setIsPresented] = useState(false)
+  const [presentationCycle, setPresentationCycle] = useState(0)
+  const surfaceRef = useRef<HTMLDivElement>(null)
+  const presentationStateFrameRef = useRef<number | null>(null)
+  const enterFrameRef = useRef<number | null>(null)
+  const exitTimeoutRef = useRef<number | null>(null)
   const previousPresentationKeyRef = useRef(presentationKey)
+  const shouldShowRef = useRef(shouldShow)
+  const isRenderedRef = useRef(isRendered)
+  const isPresentedRef = useRef(isPresented)
   const [lastVisibleSummary, setLastVisibleSummary] = useState<BetslipSummary | undefined>(
     summary?.hasSelections ? summary : undefined
   )
@@ -39,66 +47,129 @@ export function Betslip({
     selectedOddsCount: summary?.selectedOddsCount ?? 0,
   })
 
+  useLayoutEffect(() => {
+    shouldShowRef.current = shouldShow
+    isRenderedRef.current = isRendered
+    isPresentedRef.current = isPresented
+  }, [isPresented, isRendered, shouldShow])
+
   useEffect(() => {
-    let frameId: number | null = null
-    let presentationFrameId: number | null = null
+    const hasPresentationKeyChanged = previousPresentationKeyRef.current !== presentationKey
+    previousPresentationKeyRef.current = presentationKey
+
+    if (presentationStateFrameRef.current !== null) {
+      window.cancelAnimationFrame(presentationStateFrameRef.current)
+      presentationStateFrameRef.current = null
+    }
+
+    if (exitTimeoutRef.current !== null) {
+      window.clearTimeout(exitTimeoutRef.current)
+      exitTimeoutRef.current = null
+    }
 
     if (shouldShow && summary) {
-      frameId = window.requestAnimationFrame(() => {
+      const shouldRestartPresentation = (
+        hasPresentationKeyChanged
+        || !isRenderedRef.current
+        || !isPresentedRef.current
+      )
+
+      presentationStateFrameRef.current = window.requestAnimationFrame(() => {
+        presentationStateFrameRef.current = null
         setLastVisibleSummary(summary)
-        setIsRendered(true)
 
-        presentationFrameId = window.requestAnimationFrame(() => {
-          setIsPresented(true)
-        })
+        if (shouldRestartPresentation) {
+          if (enterFrameRef.current !== null) {
+            window.cancelAnimationFrame(enterFrameRef.current)
+            enterFrameRef.current = null
+          }
+
+          setIsRendered(true)
+          setIsPresented(false)
+          setPresentationCycle((current) => current + 1)
+        }
       })
 
-      return () => {
-        if (frameId !== null) window.cancelAnimationFrame(frameId)
-        if (presentationFrameId !== null) window.cancelAnimationFrame(presentationFrameId)
-      }
+      return
     }
 
-    frameId = window.requestAnimationFrame(() => {
-      setIsPresented(false)
-    })
-
-    return () => {
-      if (frameId !== null) window.cancelAnimationFrame(frameId)
+    if (enterFrameRef.current !== null) {
+      window.cancelAnimationFrame(enterFrameRef.current)
+      enterFrameRef.current = null
     }
-  }, [shouldShow, summary])
 
-  useEffect(() => {
-    if (previousPresentationKeyRef.current === presentationKey) return undefined
+    if (isRenderedRef.current || isPresentedRef.current) {
+      presentationStateFrameRef.current = window.requestAnimationFrame(() => {
+        presentationStateFrameRef.current = null
+        setIsPresented(false)
 
-    previousPresentationKeyRef.current = presentationKey
-    if (!shouldShow || !summary) return undefined
+        exitTimeoutRef.current = window.setTimeout(() => {
+          if (!shouldShowRef.current) {
+            setIsRendered(false)
+          }
 
-    let resetFrameId: number | null = null
-    let presentationFrameId: number | null = null
-
-    resetFrameId = window.requestAnimationFrame(() => {
-      setLastVisibleSummary(summary)
-      setIsRendered(true)
-      setIsPresented(false)
-
-      presentationFrameId = window.requestAnimationFrame(() => {
-        setIsPresented(true)
+          exitTimeoutRef.current = null
+        }, 420)
       })
-    })
-
-    return () => {
-      if (resetFrameId !== null) window.cancelAnimationFrame(resetFrameId)
-      if (presentationFrameId !== null) window.cancelAnimationFrame(presentationFrameId)
     }
   }, [presentationKey, shouldShow, summary])
 
-  const handleSurfaceAnimationEnd = useCallback((event: AnimationEvent<HTMLDivElement>) => {
-    if (event.animationName !== 'betslipSurfaceOut') return
-    if (shouldShow) return
+  useLayoutEffect(() => {
+    if (!isRendered || !shouldShow || isPresented) return undefined
+
+    const surface = surfaceRef.current
+    if (!surface) return undefined
+
+    if (enterFrameRef.current !== null) {
+      window.cancelAnimationFrame(enterFrameRef.current)
+      enterFrameRef.current = null
+    }
+
+    surface.getBoundingClientRect()
+    enterFrameRef.current = window.requestAnimationFrame(() => {
+      enterFrameRef.current = null
+
+      if (shouldShowRef.current) {
+        setIsPresented(true)
+      }
+    })
+
+    return () => {
+      if (enterFrameRef.current !== null) {
+        window.cancelAnimationFrame(enterFrameRef.current)
+        enterFrameRef.current = null
+      }
+    }
+  }, [isRendered, isPresented, presentationCycle, shouldShow])
+
+  useEffect(() => {
+    return () => {
+      if (presentationStateFrameRef.current !== null) {
+        window.cancelAnimationFrame(presentationStateFrameRef.current)
+      }
+
+      if (enterFrameRef.current !== null) {
+        window.cancelAnimationFrame(enterFrameRef.current)
+      }
+
+      if (exitTimeoutRef.current !== null) {
+        window.clearTimeout(exitTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  const handleSurfaceTransitionEnd = useCallback((event: TransitionEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) return
+    if (event.propertyName !== 'transform') return
+    if (shouldShowRef.current) return
+
+    if (exitTimeoutRef.current !== null) {
+      window.clearTimeout(exitTimeoutRef.current)
+      exitTimeoutRef.current = null
+    }
 
     setIsRendered(false)
-  }, [shouldShow])
+  }, [])
 
   const renderedSummary = shouldShow ? summary : lastVisibleSummary
   const visibleSelectedOddsCount = shouldShow ? summary?.selectedOddsCount ?? 0 : 0
@@ -177,50 +248,50 @@ export function Betslip({
 
   return (
     <div className={className}>
-      <div className="betslip__surface" onAnimationEnd={handleSurfaceAnimationEnd}>
+      <div className="betslip__surface" ref={surfaceRef} onTransitionEnd={handleSurfaceTransitionEnd}>
         <button
           type="button"
           className="betslip__compact"
           aria-label={`Bilhete com ${renderedSummary.selectionCount} seleções. Odds totais ${renderedSummary.totalOddsLabel}. Aposta ${renderedSummary.stakeLabel}. Para ganhar ${renderedSummary.potentialWinLabel}.`}
           onClick={onOpen}
         >
-          <span className="betslip__table" aria-hidden="true">
-            <span className="betslip__table-left">
-              <span className="betslip__cell betslip__cell--bets">
-                <span className="betslip__label">Bets</span>
-                <strong className="betslip__value betslip__count-value">
-                  <span className="betslip__count-anchor">
-                    {shouldRenderCountBurst ? (
-                      <span
-                        key={`orb-${selectionMotion.motionKey}-${selectionMotion.direction}`}
-                        className={`betslip__count-orb betslip__count-orb--${selectionMotion.direction}`}
-                        aria-hidden="true"
-                      />
-                    ) : null}
+          <span className="betslip__metrics" aria-hidden="true">
+            <span className="betslip__metric betslip__metric--bets">
+              <strong className="betslip__value betslip__count-value">
+                <span className="betslip__count-anchor">
+                  {shouldRenderCountBurst ? (
                     <span
-                      key={`count-${selectionMotion.motionKey}-${renderedSummary.selectionCount}`}
-                      className={countNumberClassName}
-                    >
-                      {renderedSummary.selectionCount}
-                    </span>
+                      key={`orb-${selectionMotion.motionKey}-${selectionMotion.direction}`}
+                      className={`betslip__count-orb betslip__count-orb--${selectionMotion.direction}`}
+                      aria-hidden="true"
+                    />
+                  ) : null}
+                  <span
+                    key={`count-${selectionMotion.motionKey}-${renderedSummary.selectionCount}`}
+                    className={countNumberClassName}
+                  >
+                    {renderedSummary.selectionCount}
                   </span>
-                </strong>
-              </span>
-              <span className="betslip__cell">
-                <span className="betslip__label">Total Odds</span>
-                <strong className="betslip__value betslip__value--rolling">{animatedTotalOddsLabel}</strong>
-              </span>
-              <span className="betslip__cell betslip__cell--stake">
-                <span className="betslip__label">Aposta</span>
-                <strong className="betslip__value">{renderedSummary.stakeLabel}</strong>
-              </span>
+                </span>
+              </strong>
+              <span className="betslip__label">Bets</span>
             </span>
-            <span className="betslip__table-right">
-              <span className="betslip__cell betslip__cell--potential">
-                <span className="betslip__label">Para Ganhar</span>
-                <strong className="betslip__value betslip__value--rolling betslip__value--potential-win">{animatedPotentialWinLabel}</strong>
+            <span className="betslip__metric">
+              <strong className="betslip__value betslip__value--rolling">{animatedTotalOddsLabel}</strong>
+              <span className="betslip__label">Odds</span>
+            </span>
+            <span className="betslip__metric betslip__metric--stake">
+              <strong className="betslip__value">{renderedSummary.stakeLabel}</strong>
+              <span className="betslip__label">Aposta</span>
+            </span>
+          </span>
+          <span className="betslip__payout" aria-hidden="true">
+            <span className="betslip__payout-button">
+              <strong className="betslip__value betslip__value--rolling betslip__value--potential-win">{animatedPotentialWinLabel}</strong>
+              <span className="betslip__payout-label">
+                <span>Para ganhar</span>
+                <CaretRightIcon aria-hidden="true" className="betslip__icon" weight="bold" />
               </span>
-              <CaretUpIcon aria-hidden="true" className="betslip__icon" weight="bold" />
             </span>
           </span>
         </button>

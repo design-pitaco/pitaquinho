@@ -43,6 +43,7 @@
   width: 100%;
   height: var(--navbar-shell-height, var(--navbar-height));
   pointer-events: auto;
+  transform: translate3d(0, calc(0px - var(--navbar-floating-lift)), 0);
 }
 
 .navbar__panel {
