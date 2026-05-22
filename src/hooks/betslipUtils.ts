@@ -94,7 +94,7 @@ const betslipDecimalFormatter = new Intl.NumberFormat('pt-BR', {
   minimumFractionDigits: 2,
 })
 
-export const formatBetslipOdd = (odd: number) => `${betslipDecimalFormatter.format(odd)}x`
+export const formatBetslipOdd = (odd: number) => `${odd.toFixed(2)}x`
 
 export const formatBetslipCurrency = (value: number) => `R$${betslipDecimalFormatter.format(value)}`
 

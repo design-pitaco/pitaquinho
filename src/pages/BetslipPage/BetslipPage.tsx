@@ -31,6 +31,7 @@ import { useBetslip } from '../../hooks/useBetslip'
 import {
   BETSLIP_ODD_INTERACTION_EVENT,
   createBetslipSelection,
+  formatBetslipOdd,
   getBetslipMarketGroupId,
   normalizeBetslipIdPart,
   type BetslipSelection,
@@ -141,10 +142,7 @@ function formatStakeInput(cents: number) {
   })
 }
 
-const formatOddsLabel = (value: number) => `${value.toLocaleString('pt-BR', {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-})}x`
+const formatOddsLabel = formatBetslipOdd
 
 const formatOddsProduct = (selections: BetslipSelection[]) => (
   formatOddsLabel(selections.reduce((total, selection) => total * selection.oddValue, 1))
@@ -2189,37 +2187,41 @@ export function BetslipPage({ onClose }: BetslipPageProps) {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
           >
-            {recommendations.map((recommendation) => (
-              <article key={recommendation.id} className="betslip-recommendation-card">
-                <div className="betslip-recommendation-card__event">
-                  <span>{getSelectionEventName(recommendation)}</span>
-                  <span>{getSelectionTimeLabel(recommendation, liveClockNowMs)}</span>
-                </div>
+            {recommendations.map((recommendation) => {
+              const recommendationOddLabel = formatOddsLabel(recommendation.oddValue)
 
-                <div className="betslip-recommendation-card__body">
-                  <SelectionIcon selection={recommendation} className="betslip-recommendation-card__flag" />
-                  <div className="betslip-recommendation-card__copy">
-                    <strong>{getSelectionTitle(recommendation)}</strong>
-                    <span>{getSelectionMarketDisplayLabel(recommendation)}</span>
+              return (
+                <article key={recommendation.id} className="betslip-recommendation-card">
+                  <div className="betslip-recommendation-card__event">
+                    <span>{getSelectionEventName(recommendation)}</span>
+                    <span>{getSelectionTimeLabel(recommendation, liveClockNowMs)}</span>
                   </div>
 
-                  <button
-                    type="button"
-                    className="betslip-recommendation-card__button"
-                    aria-label={`Adicionar ${getSelectionTitle(recommendation)} com odd ${recommendation.oddLabel}`}
-                    onMouseDown={stopRecommendationButtonDrag}
-                    onPointerDown={stopRecommendationButtonDrag}
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      handleRecommendationAdd(recommendation)
-                    }}
-                  >
-                    <span>Adicionar</span>
-                    <strong>{recommendation.oddLabel}</strong>
-                  </button>
-                </div>
-              </article>
-            ))}
+                  <div className="betslip-recommendation-card__body">
+                    <SelectionIcon selection={recommendation} className="betslip-recommendation-card__flag" />
+                    <div className="betslip-recommendation-card__copy">
+                      <strong>{getSelectionTitle(recommendation)}</strong>
+                      <span>{getSelectionMarketDisplayLabel(recommendation)}</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="betslip-recommendation-card__button"
+                      aria-label={`Adicionar ${getSelectionTitle(recommendation)} com odd ${recommendationOddLabel}`}
+                      onMouseDown={stopRecommendationButtonDrag}
+                      onPointerDown={stopRecommendationButtonDrag}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        handleRecommendationAdd(recommendation)
+                      }}
+                    >
+                      <span>Adicionar</span>
+                      <strong>{recommendationOddLabel}</strong>
+                    </button>
+                  </div>
+                </article>
+              )
+            })}
           </div>
         </section>
       </div>
