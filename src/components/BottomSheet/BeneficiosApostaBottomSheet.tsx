@@ -143,7 +143,6 @@ export function BeneficiosApostaBottomSheet({
 
   useEffect(() => {
     if (!isOpen || isDragging || visibleItems.length <= 1) return undefined
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
 
     autoAdvanceTimerRef.current = window.setTimeout(() => {
       const nextIndex = (safeActiveIndex + 1) % visibleItems.length

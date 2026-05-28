@@ -337,6 +337,11 @@
   min-width: 0;
 }
 
+.offer-card--pechincha .offer-card__player-main {
+  height: 100%;
+  align-items: center;
+}
+
 .offer-card__player-avatar {
   position: relative;
   width: 40px;

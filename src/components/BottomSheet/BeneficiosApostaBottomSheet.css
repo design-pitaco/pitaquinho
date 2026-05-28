@@ -145,14 +145,3 @@
     width: 100%;
   }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .beneficios-aposta-bs__track {
-    transition: none;
-  }
-
-  .beneficios-aposta-bs__dot-progress {
-    animation: none;
-    width: 100%;
-  }
-}

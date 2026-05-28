@@ -812,11 +812,11 @@ export function Home({
         <Fragment key={`destaques-${contentResetKey}`}>
           {/* <ContentTabs /> */}
           <PromotionSection promotions={sportsPromotions} />
+          <OffersSection />
           <LiveSection
             onMatchClick={handleLiveMatchClick}
             onOpenCompetition={handleOpenCompetition}
           />
-          <OffersSection />
           <PreMatchSection
             onOpenCompetition={handleOpenCompetition}
             onMatchClick={handleLiveMatchClick}
