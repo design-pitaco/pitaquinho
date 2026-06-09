@@ -129,6 +129,17 @@
   position: relative;
 }
 
+.offer-card--pechincha {
+  background:
+    linear-gradient(
+      180deg,
+      rgb(var(--primitives-brand-purple-brand-purple-400-rgb, 151 48 255) / 0.12) 0%,
+      rgb(var(--primitives-brand-purple-brand-purple-700-rgb, 69 20 118) / 0.12) 28%,
+      rgb(var(--tokens-layer-layer-01-rgb, 26 26 26) / 0.12) 60%
+    ),
+    var(--Tokens-layer-layer-01, #1A1A1A);
+}
+
 /* Border gradiente */
 .offer-card::before {
   content: '';
@@ -473,19 +484,21 @@
 }
 
 .offer-card__button--pechincha {
-  justify-content: space-between;
-  min-height: 40px;
+  justify-content: center;
   height: 40px;
+  min-height: 40px;
   padding: 0 12px;
-  gap: 8px;
 }
 
-.offer-card__button-rules {
+.offer-card__rules {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  align-items: flex-start;
+  gap: 0;
+  list-style: none;
   min-width: 0;
+  margin: 0;
+  padding: 0;
   color: var(--tokens-text-text-02);
   font-family: 'Red Hat Text', sans-serif;
   font-size: 10px;
@@ -494,11 +507,19 @@
   text-align: left;
 }
 
-.offer-card__button-rules span {
+.offer-card__rules li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.offer-card__rules li::before {
+  content: '•';
+  flex: 0 0 auto;
 }
 
 .offer-card__odds {
@@ -509,6 +530,7 @@
 
 .offer-card__button--pechincha .offer-card__odds {
   flex: 0 0 auto;
+  justify-content: center;
 }
 
 .offer-card__old-odd {
@@ -650,6 +672,16 @@
 }
 
 .offer-card__footer--with-viewall .offer-card__button {
+  width: 140px;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+
+.offer-card__footer--with-rules {
+  justify-content: space-between;
+}
+
+.offer-card__footer--with-rules .offer-card__button {
   width: 140px;
   flex-shrink: 0;
   flex-grow: 0;
