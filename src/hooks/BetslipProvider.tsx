@@ -75,19 +75,28 @@ const addSelectionsToState = (
     selectedSelectionIdsByGroup[groupId] = selection.id
   })
 
-  const selectionsById = { ...current.selectionsById }
-  selectionIdsToRemove.forEach((selectionId) => {
-    delete selectionsById[selectionId]
-  })
-
   const activeSelectionIds = new Set(Object.values(selectedSelectionIdsByGroup))
-  Object.keys(selectionsById).forEach((selectionId) => {
-    if (!activeSelectionIds.has(selectionId)) delete selectionsById[selectionId]
-  })
-
-  entries.forEach(({ selection }) => {
-    selectionsById[selection.id] = selection
-  })
+  const entrySelectionIds = new Set(entries.map(({ selection }) => selection.id))
+  const currentSelections = Object.values(current.selectionsById)
+  const firstReplacedSelectionIndex = currentSelections.findIndex((selection) => (
+    selectionIdsToRemove.has(selection.id)
+  ))
+  const remainingSelections = currentSelections.filter((selection) => (
+    activeSelectionIds.has(selection.id)
+    && !selectionIdsToRemove.has(selection.id)
+    && !entrySelectionIds.has(selection.id)
+  ))
+  const insertionIndex = firstReplacedSelectionIndex === -1
+    ? remainingSelections.length
+    : Math.min(firstReplacedSelectionIndex, remainingSelections.length)
+  const nextSelections = [
+    ...remainingSelections.slice(0, insertionIndex),
+    ...entries.map(({ selection }) => selection),
+    ...remainingSelections.slice(insertionIndex),
+  ]
+  const selectionsById = Object.fromEntries(
+    nextSelections.map((selection) => [selection.id, selection])
+  )
 
   return {
     selectionsById,
@@ -175,16 +184,7 @@ export function BetslipProvider({ children }: { children: ReactNode }) {
 
   const removeSelection = useCallback((selectionId: string) => {
     setBetslipState((current) => {
-      const selectionToRemove = current.selectionsById[selectionId]
       const selectionIdsToRemove = new Set([selectionId])
-
-      if (selectionToRemove?.comboId) {
-        Object.values(current.selectionsById).forEach((selection) => {
-          if (selection.comboId === selectionToRemove.comboId) {
-            selectionIdsToRemove.add(selection.id)
-          }
-        })
-      }
 
       const selectedSelectionIdsByGroup = { ...current.selectedSelectionIdsByGroup }
 
@@ -213,14 +213,36 @@ export function BetslipProvider({ children }: { children: ReactNode }) {
   const summary = useMemo<BetslipSummary>(() => {
     if (selections.length === 0) return EMPTY_BETSLIP_SUMMARY
 
-    const countedComboIds = new Set<string>()
-    const totalOdds = selections.reduce((total, selection) => {
-      if (!selection.comboId) return total * selection.oddValue
-      if (countedComboIds.has(selection.comboId)) return total
+    const comboSelectionsById = new Map<string, BetslipSelection[]>()
+    const standaloneSelections: BetslipSelection[] = []
 
-      countedComboIds.add(selection.comboId)
-      return total * (selection.comboTotalOddValue ?? selection.oddValue)
-    }, 1)
+    selections.forEach((selection) => {
+      if (!selection.comboId) {
+        standaloneSelections.push(selection)
+        return
+      }
+
+      comboSelectionsById.set(selection.comboId, [
+        ...(comboSelectionsById.get(selection.comboId) ?? []),
+        selection,
+      ])
+    })
+
+    let totalOdds = standaloneSelections.reduce((total, selection) => total * selection.oddValue, 1)
+
+    comboSelectionsById.forEach((comboSelections) => {
+      const firstSelection = comboSelections[0]
+      const isCompleteCombo = Boolean(
+        firstSelection?.comboTotalOddValue
+        && firstSelection.comboLegCount
+        && comboSelections.length >= firstSelection.comboLegCount
+      )
+
+      totalOdds *= isCompleteCombo
+        ? firstSelection.comboTotalOddValue!
+        : comboSelections.reduce((comboTotal, selection) => comboTotal * selection.oddValue, 1)
+    })
+
     const potentialWin = BETSLIP_STAKE * totalOdds
 
     return {

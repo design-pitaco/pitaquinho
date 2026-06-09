@@ -7,11 +7,17 @@ import {
   createBetslipSelection,
   getBetslipEventId,
   getBetslipMarketGroupId,
+  normalizeBetslipIdPart,
   type BetslipSelection,
 } from '../../hooks/betslipUtils'
 import { useBetslip } from '../../hooks/useBetslip'
 import { useOddSelection } from '../../hooks/useOddSelection'
 import { useSlidingActiveIndicator } from '../../hooks/useSlidingActiveIndicator'
+import {
+  BETSLIP_PECHINCHA_MAX_STAKE_RULE_LABEL,
+  BETSLIP_PECHINCHA_SELECTION_RULE_LABEL,
+  BETSLIP_PECHINCHA_TOTAL_ODDS_RULE_LABEL,
+} from '../../hooks/betslipPechinchaRules'
 import { getTennisPlayerCountryIcon } from '../../data/tennisCountryIcons'
 
 import iconCombinada from '../../assets/iconCombinada.png'
@@ -61,12 +67,26 @@ interface FilterChip {
 
 const filterChips: FilterChip[] = [
   { id: 'melhores', label: 'As melhores' },
+  { id: 'pechinchas', label: 'Pechinchas' },
   { id: 'super-combinadas', label: 'Super Combinadas' },
   { id: 'combinadas', label: 'Combinadas' },
   { id: 'super-aumentada', label: 'Super Aumentada' },
   { id: 'aumentada', label: 'Aumentada' },
-  { id: 'pechinchas', label: 'Pechinchas' },
 ]
+
+const offerPechinchaRuleLabels = [
+  BETSLIP_PECHINCHA_MAX_STAKE_RULE_LABEL,
+  BETSLIP_PECHINCHA_SELECTION_RULE_LABEL,
+  BETSLIP_PECHINCHA_TOTAL_ODDS_RULE_LABEL,
+]
+
+const offerAumentadaRuleLabels = [
+  'Entrada max. R$350',
+  'Min. 3+ seleções de 1.40+',
+  'Odd total mín. 4.00x',
+]
+
+const showSuperCombinadaOffers = false
 
 const offerTeamNameByLogo: Record<string, string> = {
   [escudoBayerLeverkusen]: 'B. Leverkusen',
@@ -114,6 +134,31 @@ function OfferTeamLogo({ teamName, currentLogo, sport, className }: OfferTeamLog
 
 const getOfferTeamName = (label: string, logo: string) =>
   offerTeamNameByLogo[logo] ?? label
+
+const offerTeamAliasByKey: Record<string, string> = {
+  'chicago-bulls': 'bulls',
+  'miami-heat': 'heat',
+  'golden-state': 'warriors',
+  'golden-state-warriors': 'warriors',
+  'la-lakers': 'lakers',
+  'los-angeles-lakers': 'lakers',
+  'detroit-pistons': 'pistons',
+  'cleveland-cavaliers': 'cavaliers',
+}
+
+const getOfferTeamKey = (teamName = '') => {
+  const normalizedTeam = normalizeBetslipIdPart(
+    teamName
+      .replace(/\b\d+(?:[,.]\d+)?\+?\b/g, ' ')
+      .replace(/\b(?:mais|menos|de|over|under)\b/gi, ' ')
+  )
+
+  return offerTeamAliasByKey[normalizedTeam] ?? normalizedTeam
+}
+
+const isSameOfferTeam = (firstTeam: string | undefined, secondTeam: string | undefined) => (
+  Boolean(firstTeam && secondTeam && getOfferTeamKey(firstTeam) === getOfferTeamKey(secondTeam))
+)
 
 interface OfferCard {
   id: string
@@ -179,6 +224,111 @@ interface LiveOfferDetails {
   awayScore: number
 }
 
+interface OfferMatchFixture {
+  sport: string
+  homeTeam: string
+  awayTeam: string
+  homeIcon?: string
+  awayIcon?: string
+  dateTime?: string
+}
+
+const offerMatchFixtures: OfferMatchFixture[] = [
+  {
+    sport: 'basquete',
+    homeTeam: 'Bulls',
+    awayTeam: 'Heat',
+    homeIcon: escudoBullsGde,
+    awayIcon: escudoMiami,
+    dateTime: 'Hoje, 22:00',
+  },
+  {
+    sport: 'basquete',
+    homeTeam: 'Warriors',
+    awayTeam: 'Lakers',
+    homeIcon: escudoWarriorsGde,
+    awayIcon: escudoLakers,
+    dateTime: 'Amanhã, 21:30',
+  },
+  {
+    sport: 'basquete',
+    homeTeam: 'Pistons',
+    awayTeam: 'Cavaliers',
+    homeIcon: escudoPistonsGde,
+    awayIcon: escudoCavaliers,
+    dateTime: 'Amanhã, 23:00',
+  },
+]
+
+const findOfferMatchFixture = (teamName: string | undefined, sport: string | undefined, opponentName?: string) => {
+  if (!teamName) return undefined
+
+  return offerMatchFixtures.find((fixture) => {
+    if (sport && fixture.sport !== sport) return false
+
+    const hasTeam = isSameOfferTeam(fixture.homeTeam, teamName) || isSameOfferTeam(fixture.awayTeam, teamName)
+    const hasOpponent = !opponentName
+      || isSameOfferTeam(fixture.homeTeam, opponentName)
+      || isSameOfferTeam(fixture.awayTeam, opponentName)
+
+    return hasTeam && hasOpponent
+  })
+}
+
+const resolveOfferMatch = ({
+  sport,
+  teamName,
+  opponentName,
+  fallbackHomeTeam,
+  fallbackAwayTeam,
+  fallbackHomeIcon,
+  fallbackAwayIcon,
+  fallbackDate,
+}: {
+  sport?: string
+  teamName?: string
+  opponentName?: string
+  fallbackHomeTeam?: string
+  fallbackAwayTeam?: string
+  fallbackHomeIcon?: string
+  fallbackAwayIcon?: string
+  fallbackDate?: string
+}): OfferMatchFixture => {
+  const fixture = findOfferMatchFixture(teamName, sport, opponentName)
+  if (fixture) return fixture
+
+  return {
+    sport: sport ?? 'ofertas',
+    homeTeam: fallbackHomeTeam || teamName || 'Evento',
+    awayTeam: fallbackAwayTeam || opponentName || '',
+    homeIcon: fallbackHomeIcon,
+    awayIcon: fallbackAwayIcon,
+    dateTime: fallbackDate,
+  }
+}
+
+const getLiveOfferDetailsForMatch = (
+  detailsByMatch: Record<string, LiveOfferDetails>,
+  match: OfferMatchFixture,
+  fallbackDetails?: LiveOfferDetails
+) => (
+  detailsByMatch[`${match.homeTeam} vs ${match.awayTeam}`]
+    ?? detailsByMatch[`${match.awayTeam} vs ${match.homeTeam}`]
+    ?? fallbackDetails
+)
+
+const parseOfferOddValue = (oddLabel: string) => {
+  const oddValue = Number.parseFloat(oddLabel.replace(',', '.').replace(/[^0-9.]/g, ''))
+  return Number.isFinite(oddValue) && oddValue > 0 ? oddValue : null
+}
+
+const getOfferComboLegOddLabel = (totalOddLabel: string, legCount: number) => {
+  const totalOddValue = parseOfferOddValue(totalOddLabel)
+  if (!totalOddValue || legCount <= 0) return totalOddLabel
+
+  return `${Math.pow(totalOddValue, 1 / legCount).toFixed(2)}x`
+}
+
 interface OfferBetslipEntry {
   groupId: string
   selection: BetslipSelection
@@ -204,13 +354,13 @@ const getOfferComboLegCount = (offer: OfferCard) => (
 
 const getOfferComboBetslipEntries = (
   offer: OfferCard,
-  liveDetails: LiveOfferDetails | undefined
+  liveDetailsByMatch: Record<string, LiveOfferDetails>
 ): OfferBetslipEntry[] => {
   const legCount = getOfferComboLegCount(offer)
   if (offer.player || offer.teamStat || legCount === 0) return []
 
-  const eventStatus = liveDetails ? 'live' : 'prematch'
-  const eventTimeLabel = liveDetails?.time ?? offer.date
+  const offerLiveDetails = offer.subtitle ? liveDetailsByMatch[offer.subtitle] : undefined
+  const comboLegOddLabel = getOfferComboLegOddLabel(offer.newOdd, legCount)
   const comboId = `offer-${offer.id}`
   const comboProps = {
     comboId,
@@ -222,35 +372,50 @@ const getOfferComboBetslipEntries = (
 
   if (offer.events?.length) {
     return offer.events.map((event, index) => {
-      const homeTeam = getOfferTeamName(event.team1, event.team1Icon) || event.team1
-      const awayTeam = getOfferTeamName('', event.team2Icon)
-      const eventName = awayTeam ? `${homeTeam} x ${awayTeam}` : homeTeam
-      const marketId = `${event.market}-${homeTeam}-${awayTeam || index}`
+      const selectedTeamName = getOfferTeamName(event.team1, event.team1Icon) || event.team1
+      const opponentTeamName = getOfferTeamName('', event.team2Icon)
+      const resolvedMatch = resolveOfferMatch({
+        sport: offer.sport,
+        teamName: selectedTeamName,
+        opponentName: opponentTeamName,
+        fallbackHomeTeam: selectedTeamName,
+        fallbackAwayTeam: opponentTeamName,
+        fallbackHomeIcon: event.team1Icon,
+        fallbackAwayIcon: event.team2Icon,
+        fallbackDate: offer.date,
+      })
+      const liveDetails = getLiveOfferDetailsForMatch(liveDetailsByMatch, resolvedMatch, offerLiveDetails)
+      const eventName = resolvedMatch.awayTeam
+        ? `${resolvedMatch.homeTeam} x ${resolvedMatch.awayTeam}`
+        : resolvedMatch.homeTeam
+      const marketId = `${event.market}-${selectedTeamName}-${resolvedMatch.homeTeam}-${resolvedMatch.awayTeam || index}`
+      const isTeamSelection = normalizeBetslipIdPart(event.team1) === normalizeBetslipIdPart(selectedTeamName)
+        && (isSameOfferTeam(selectedTeamName, resolvedMatch.homeTeam) || isSameOfferTeam(selectedTeamName, resolvedMatch.awayTeam))
       const selection = createBetslipSelection({
         eventId: getBetslipEventId({
           sport: offer.sport ?? 'ofertas',
-          homeTeam,
-          awayTeam,
+          homeTeam: resolvedMatch.homeTeam,
+          awayTeam: resolvedMatch.awayTeam,
           fallbackId: `${offer.id}-event-${index}`,
         }),
         marketId,
         outcomeId: `${offer.id}-${index}-${event.team1}`,
         label: event.team1,
         selectionLabel: event.team1,
-        odd: offer.newOdd,
+        odd: comboLegOddLabel,
         marketLabel: event.market,
-        eventStatus,
-        selectionType: event.team1 === homeTeam ? 'team' : 'market',
+        eventStatus: liveDetails ? 'live' : 'prematch',
+        selectionType: isTeamSelection ? 'team' : 'market',
         sport: offer.sport,
-        homeTeam,
-        awayTeam,
+        homeTeam: resolvedMatch.homeTeam,
+        awayTeam: resolvedMatch.awayTeam,
         eventName,
-        eventTimeLabel,
+        eventTimeLabel: liveDetails?.time ?? resolvedMatch.dateTime ?? offer.date,
         liveClock: liveDetails?.time,
         homeScore: liveDetails?.homeScore,
         awayScore: liveDetails?.awayScore,
-        homeTeamIcon: event.team1Icon,
-        awayTeamIcon: event.team2Icon,
+        homeTeamIcon: resolvedMatch.homeIcon,
+        awayTeamIcon: resolvedMatch.awayIcon,
         selectionIcon: event.team1Icon,
         badgeType: 'boost',
         comboLegIndex: index,
@@ -269,11 +434,19 @@ const getOfferComboBetslipEntries = (
   return (offer.playerEvents ?? []).map((playerEvent, index) => {
     const eventMatchTeams = getOfferMatchTeams(playerEvent.name) ?? offerMatchTeams
     const iconTeamName = getOfferTeamName('', playerEvent.icon)
-    const homeTeam = eventMatchTeams?.homeTeam ?? iconTeamName
-    const awayTeam = eventMatchTeams?.awayTeam
-    const eventName = eventMatchTeams
-      ? `${eventMatchTeams.homeTeam} x ${eventMatchTeams.awayTeam}`
-      : homeTeam || offer.subtitle || offer.title
+    const resolvedMatch = resolveOfferMatch({
+      sport: offer.sport,
+      teamName: iconTeamName || eventMatchTeams?.homeTeam,
+      opponentName: eventMatchTeams?.awayTeam,
+      fallbackHomeTeam: eventMatchTeams?.homeTeam ?? iconTeamName,
+      fallbackAwayTeam: eventMatchTeams?.awayTeam,
+      fallbackHomeIcon: eventMatchTeams ? undefined : playerEvent.icon,
+      fallbackDate: offer.date,
+    })
+    const liveDetails = getLiveOfferDetailsForMatch(liveDetailsByMatch, resolvedMatch, offerLiveDetails)
+    const eventName = resolvedMatch.awayTeam
+      ? `${resolvedMatch.homeTeam} x ${resolvedMatch.awayTeam}`
+      : resolvedMatch.homeTeam || offer.subtitle || offer.title
     const isMatchName = !!getOfferMatchTeams(playerEvent.name)
     const isTeamSelection = !!iconTeamName && playerEvent.name === iconTeamName
     const isPlayerSelection = !!playerEvent.value
@@ -291,29 +464,30 @@ const getOfferComboBetslipEntries = (
     const selection = createBetslipSelection({
       eventId: getBetslipEventId({
         sport: offer.sport ?? 'ofertas',
-        homeTeam,
-        awayTeam,
+        homeTeam: resolvedMatch.homeTeam,
+        awayTeam: resolvedMatch.awayTeam,
         fallbackId: `${offer.id}-event-${index}`,
       }),
       marketId,
       outcomeId: `${offer.id}-${index}-${selectionLabel}`,
       label,
       selectionLabel,
-      odd: offer.newOdd,
+      odd: comboLegOddLabel,
       marketLabel,
-      eventStatus,
+      eventStatus: liveDetails ? 'live' : 'prematch',
       selectionType: isPlayerSelection ? 'player' : isTeamSelection ? 'team' : 'market',
       sport: offer.sport,
-      homeTeam,
-      awayTeam,
+      homeTeam: resolvedMatch.homeTeam,
+      awayTeam: resolvedMatch.awayTeam,
       eventName,
-      eventTimeLabel,
+      eventTimeLabel: liveDetails?.time ?? resolvedMatch.dateTime ?? offer.date,
       liveClock: liveDetails?.time,
       homeScore: liveDetails?.homeScore,
       awayScore: liveDetails?.awayScore,
       playerName: isPlayerSelection ? playerEvent.name : undefined,
       selectionIcon: playerEvent.icon,
-      homeTeamIcon: iconTeamName ? playerEvent.icon : undefined,
+      homeTeamIcon: resolvedMatch.homeIcon,
+      awayTeamIcon: resolvedMatch.awayIcon,
       badgeType: 'boost',
       comboLegIndex: index,
       ...comboProps,
@@ -472,6 +646,27 @@ const allOffers: OfferCard[] = [
       { icon: getTennisPlayerCountryIcon('Shevchenko', iconTenis), name: 'Shevchenko x Gaston', value: 'Shevchenko', market: 'Vencedor' },
       { icon: getTennisPlayerCountryIcon('Virtanen', iconTenis), name: 'Virtanen x Perricard', value: 'Mais de 23.5', market: 'Games' },
     ],
+  },
+  {
+    id: '5',
+    type: 'pechincha',
+    category: 'melhores',
+    sport: 'futebol',
+    title: 'Craque demais.',
+    tagLabel: 'Pechincha',
+    tagColor: '#9730FF',
+    tagIcon: iconPechincha,
+    subtitle: 'Barcelona vs Real Madrid',
+    date: '11/09, 16:00',
+    newOdd: '1.72x',
+    player: {
+      name: 'L. Yamal',
+      team: 'Barcelona',
+      image: playerYamal,
+      stat: 'Finalizações ao gol',
+      statValue: 'Mais de 0.5',
+      oldStatValue: '3.5',
+    },
   },
   {
     id: '1',
@@ -659,28 +854,6 @@ const allOffers: OfferCard[] = [
     ],
     showViewAll: 4,
   },
-  {
-    id: '5',
-    type: 'pechincha',
-    category: 'melhores',
-    sport: 'futebol',
-    title: 'Craque demais.',
-    tagLabel: 'Pechincha',
-    tagColor: '#9730FF',
-    tagIcon: iconPechincha,
-    subtitle: 'Barcelona vs Real Madrid',
-    date: '11/09, 16:00',
-    newOdd: '1.72x',
-    player: {
-      name: 'L. Yamal',
-      team: 'Barcelona',
-      image: playerYamal,
-      stat: 'Finalizações ao gol',
-      statValue: 'Mais de 0.5',
-      oldStatValue: '3.5',
-    },
-  },
-
   // === COMBINADAS ===
   {
     id: 'comb-0a',
@@ -1260,8 +1433,12 @@ export function OffersSection({ sportFilter, liveOnly = false }: OffersSectionPr
   const matchesLiveFilter = (offer: OfferCard) =>
     !liveOnly || !!(offer.subtitle && liveOfferDetailsByMatch[offer.subtitle])
 
+  const visibleOffers = allOffers.filter((offer) => (
+    showSuperCombinadaOffers || offer.type !== 'super_combinada'
+  ))
+
   const visibleChips = filterChips.filter(chip =>
-    allOffers.some(offer => offer.category === chip.id && matchesSportFilter(offer) && matchesLiveFilter(offer))
+    visibleOffers.some(offer => offer.category === chip.id && matchesSportFilter(offer) && matchesLiveFilter(offer))
   )
   const selectedFilter = visibleChips.some((chip) => chip.id === activeFilter)
     ? activeFilter
@@ -1269,7 +1446,7 @@ export function OffersSection({ sportFilter, liveOnly = false }: OffersSectionPr
   const activeFilterIndex = visibleChips.findIndex((chip) => chip.id === selectedFilter)
   const activeFilterIndicatorKey = `${selectedFilter}:${visibleChips.map((chip) => chip.id).join('|')}`
 
-  const filteredOffers = allOffers.filter(offer => {
+  const filteredOffers = visibleOffers.filter(offer => {
     if (offer.category !== selectedFilter) return false
     return matchesSportFilter(offer)
       && matchesLiveFilter(offer)
@@ -1288,15 +1465,20 @@ export function OffersSection({ sportFilter, liveOnly = false }: OffersSectionPr
   const getOfferOddButtonProps = (offer: OfferCard) => {
     const liveDetails = getOfferLiveDetails(offer)
     const liveTime = liveDetails?.time
-    const comboEntries = getOfferComboBetslipEntries(offer, liveDetails)
+    const comboEntries = getOfferComboBetslipEntries(offer, liveOfferDetailsByMatch)
 
     if (comboEntries.length > 0) {
       const selectedSelectionIds = new Set(Object.values(selectedSelectionIdsByGroup))
       const isSelected = comboEntries.every(({ selection }) => selectedSelectionIds.has(selection.id))
+      const buttonClassName = [
+        'offer-card__button',
+        offer.type === 'pechincha' ? 'offer-card__button--pechincha' : '',
+        isSelected ? 'odd-button--selected' : '',
+      ].filter(Boolean).join(' ')
 
       return {
         type: 'button' as const,
-        className: `offer-card__button${isSelected ? ' odd-button--selected' : ''}`,
+        className: buttonClassName,
         'aria-pressed': isSelected,
         onClick: (event: MouseEvent<HTMLButtonElement>) => {
           event.stopPropagation()
@@ -1318,7 +1500,7 @@ export function OffersSection({ sportFilter, liveOnly = false }: OffersSectionPr
     return getOddButtonProps(
       `offer:${offer.id}:odd`,
       `offer:${offer.id}`,
-      'offer-card__button',
+      `offer-card__button${offer.type === 'pechincha' ? ' offer-card__button--pechincha' : ''}`,
       createBetslipSelection({
         eventId: getBetslipEventId({
           sport: offer.sport ?? 'ofertas',
@@ -1489,7 +1671,7 @@ export function OffersSection({ sportFilter, liveOnly = false }: OffersSectionPr
               }
             }}
           >
-            {chip.label}
+            <span>{chip.label}</span>
           </button>
         ))}
       </div>
@@ -1505,6 +1687,18 @@ export function OffersSection({ sportFilter, liveOnly = false }: OffersSectionPr
       >
         {filteredOffers.map((offer) => {
           const liveTime = getOfferLiveTime(offer)
+
+          const offerRuleLabels = offer.type === 'pechincha'
+            ? offerPechinchaRuleLabels
+            : offer.type === 'aumentada'
+              ? offerAumentadaRuleLabels
+              : undefined
+          const offerRulesId = offerRuleLabels ? `offer-${offer.id}-rules` : undefined
+          const footerClassName = [
+            'offer-card__footer',
+            offer.showViewAll ? 'offer-card__footer--with-viewall' : '',
+            offerRuleLabels ? 'offer-card__footer--with-rules' : '',
+          ].filter(Boolean).join(' ')
 
           return (
           <div key={offer.id} className={`offer-card offer-card--${offer.type.replace('_', '-')}`}>
@@ -1603,30 +1797,34 @@ export function OffersSection({ sportFilter, liveOnly = false }: OffersSectionPr
             {/* Card Content - Player (for player type) */}
             {offer.player && (
               <div className="offer-card__player">
-                <div className="offer-card__player-avatar">
-                  <img src={offer.player.image} alt={offer.player.name} className="offer-card__player-img" />
-                  <div className="offer-card__player-badge offer-card__player-badge--sport">
-                    <img src={offer.player.sportIcon || iconFutebol} alt="" />
+                <div className="offer-card__player-row">
+                  <div className="offer-card__player-avatar">
+                    <img src={offer.player.image} alt={offer.player.name} className="offer-card__player-img" />
+                    <div className="offer-card__player-badge offer-card__player-badge--sport">
+                      <img src={offer.player.sportIcon || iconFutebol} alt="" />
+                    </div>
+                    <div className="offer-card__player-badge offer-card__player-badge--stat">
+                      <span aria-hidden="true" className="offer-card__player-stat-icon" />
+                    </div>
                   </div>
-                  <div className="offer-card__player-badge offer-card__player-badge--stat">
-                    <span aria-hidden="true" className="offer-card__player-stat-icon" />
+                  <div className="offer-card__player-main">
+                    <div className="offer-card__player-info">
+                      <span className="offer-card__player-name">{offer.player.name}</span>
+                      <span className="offer-card__player-team">{offer.player.team}</span>
+                    </div>
+                    <div className="offer-card__player-stat">
+                      <span className="offer-card__player-stat-value">
+                        {offer.player.oldStatValue ? (
+                          <>
+                            {offer.player.statValue.replace(/[\d.]+$/, '')}<span className="offer-card__player-stat-old">{offer.player.oldStatValue}</span> » {offer.player.statValue.match(/[\d.]+$/)?.[0]}
+                          </>
+                        ) : (
+                          offer.player.statValue
+                        )}
+                      </span>
+                      <span className="offer-card__player-stat-label">{offer.player.stat}</span>
+                    </div>
                   </div>
-                </div>
-                <div className="offer-card__player-info">
-                  <span className="offer-card__player-name">{offer.player.name}</span>
-                  <span className="offer-card__player-team">{offer.player.team}</span>
-                </div>
-                <div className="offer-card__player-stat">
-                  <span className="offer-card__player-stat-value">
-                    {offer.player.oldStatValue ? (
-                      <>
-                        {offer.player.statValue.replace(/[\d.]+$/, '')}<span className="offer-card__player-stat-old">{offer.player.oldStatValue}</span> » {offer.player.statValue.match(/[\d.]+$/)?.[0]}
-                      </>
-                    ) : (
-                      offer.player.statValue
-                    )}
-                  </span>
-                  <span className="offer-card__player-stat-label">{offer.player.stat}</span>
                 </div>
               </div>
             )}
@@ -1653,16 +1851,24 @@ export function OffersSection({ sportFilter, liveOnly = false }: OffersSectionPr
             )}
 
             {/* Card Footer */}
-            <div className={`offer-card__footer ${offer.showViewAll ? 'offer-card__footer--with-viewall' : ''}`}>
+            <div className={footerClassName}>
               {offer.showViewAll && (
                 <button className="offer-card__viewall">
                   <span>Ver todos ({offer.showViewAll})</span>
                   <CaretDownIcon aria-hidden="true" className="offer-card__viewall-icon" weight="bold" />
                 </button>
               )}
+              {offerRuleLabels && (
+                <ul id={offerRulesId} className="offer-card__rules">
+                  {offerRuleLabels.map((label) => (
+                    <li key={label}>{label}</li>
+                  ))}
+                </ul>
+              )}
               <button
                 {...getOfferOddButtonProps(offer)}
                 aria-label={`Selecionar oferta ${offer.title} com odd ${offer.newOdd}`}
+                aria-describedby={offerRulesId}
               >
                 <div className="offer-card__odds">
                   {offer.oldOdd && (

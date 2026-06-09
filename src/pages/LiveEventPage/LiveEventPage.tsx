@@ -6,12 +6,11 @@ import './LiveEventPage.css'
 import { PreMatchPlayerPropCard, getMatchPlayerProps, type MatchPlayerProp } from '../../components/PreMatchSection/PreMatchSection'
 import { getLivePlayerProps } from '../../components/LiveMatchCard'
 import iconAoVivo from '../../assets/iconAoVivo.png'
-import reiAntecipaFutebol from '../../assets/reiAntecipaFutebol.png'
-import reiAntecipaBasquete from '../../assets/reiAntecipaBasquete.png'
+import pagamentoAntecipado from '../../assets/pagamentoAntecipado.png'
 import substituicaoGarantida from '../../assets/substituicaoGarantida.png'
 import multiplaTurbinada from '../../assets/multiplaTurbinada.png'
-import streamingFutebol from '../../assets/streamingFutebol.png'
-import streamingBasquete from '../../assets/streamingBasquete.png'
+import streamingFutebol from '../../assets/streamingFutebol.webp'
+import streamingBasquete from '../../assets/streamingBasquete.webp'
 import iconBasquete from '../../assets/iconSports/basketball.png'
 import iconFutebol from '../../assets/iconSports/soccer.png'
 import escudoDefaultBasquete from '../../assets/escudoDefaultBasquete.png'
@@ -1456,7 +1455,7 @@ function LiveEventContent({
   const liveStreamImage = isBasketball ? streamingBasquete : streamingFutebol
   const eventBallIcon = isBasketball ? iconBasquete : iconFutebol
   const playerAvatarFallback = isBasketball ? playerAvatarBasquete : playerAvatarFutebol
-  const earlyPayoutImage = isBasketball ? reiAntecipaBasquete : reiAntecipaFutebol
+  const earlyPayoutImage = pagamentoAntecipado
   const resultMarketTitle = isBasketball ? 'Vencedor - Pagamento Antecipado' : 'Resultado final - Pagamento Antecipado'
   const fieldTabLabel = isBasketball ? 'Quadra' : 'Campo'
   const fieldViewLabel = isBasketball ? 'Visão da Quadra' : 'Visão do Campo'
@@ -1518,6 +1517,8 @@ function LiveEventContent({
       eventId,
       marketId,
       eventStatus: isLiveMatch ? 'live' as const : 'prematch' as const,
+      leagueId: match.leagueId,
+      leagueName: match.leagueName ?? leagueName,
       homeTeam: match.homeTeam.name,
       awayTeam: match.awayTeam.name,
       eventTimeLabel: isLiveMatch ? displayTime : scheduledDateTime,
@@ -1602,13 +1603,15 @@ function LiveEventContent({
             marketLabel: getMarketTitle(marketId),
             eventStatus: isLiveMatch ? 'live' : 'prematch',
             sport: contentSport,
+            leagueId: match.leagueId,
+            leagueName: match.leagueName ?? leagueName,
             homeTeam: match.homeTeam.name,
             awayTeam: match.awayTeam.name,
             eventTimeLabel: isLiveMatch ? displayTime : scheduledDateTime,
             liveClock: isLiveMatch ? displayTime : undefined,
             homeScore: match.homeTeam.score,
             awayScore: match.awayTeam.score,
-            badgeType: marketId === resultMarketId ? 'boost' : 'substitution',
+            badgeType: marketId === resultMarketId ? 'boost' : undefined,
           })
         )}
       >
@@ -1995,6 +1998,7 @@ function LiveEventContent({
       <div
         className={[
           'live-event-page__sticky-score-header',
+          'header--gradient-v3',
           isLiveMatch ? '' : 'live-event-page__sticky-score-header--prematch',
           isStickyScoreHeaderVisible ? 'live-event-page__sticky-score-header--visible' : '',
         ].filter(Boolean).join(' ')}
@@ -2004,6 +2008,9 @@ function LiveEventContent({
         onPointerUp={handleStickyCollapsePointerUp}
         onPointerCancel={handleStickyCollapsePointerCancel}
       >
+        <div className="header__bg-light" aria-hidden="true" />
+        <div className="header__bg-dark" aria-hidden="true" />
+        <div className="header__bg-gradient" aria-hidden="true" />
         <span className="live-event-page__sticky-collapse-handle" aria-hidden="true">
           <span />
         </span>
@@ -2060,26 +2067,29 @@ function LiveEventContent({
         onScroll={handleContentScroll}
         onWheel={handleContentWheel}
       >
-        <div className="live-event-page__scroll-body">
-        <button
-          type="button"
-          className="live-event-page__top-close-area"
-          aria-label="Fechar evento"
-          onClick={handleTopAreaClick}
-        >
-          <span
-            className="live-event-page__drag-handle"
-            onClick={(event) => event.stopPropagation()}
-            onPointerDown={handleCloseHandlePointerDown}
-            onPointerUp={handleCloseHandlePointerUp}
-            onPointerCancel={handleCloseHandlePointerCancel}
+        <div className="live-event-page__scroll-body header--gradient-v3">
+          <div className="header__bg-light" aria-hidden="true" />
+          <div className="header__bg-dark" aria-hidden="true" />
+          <div className="header__bg-gradient" aria-hidden="true" />
+          <button
+            type="button"
+            className="live-event-page__top-close-area"
+            aria-label="Fechar evento"
+            onClick={handleTopAreaClick}
           >
-            <span />
-          </span>
-        </button>
+            <span
+              className="live-event-page__drag-handle"
+              onClick={(event) => event.stopPropagation()}
+              onPointerDown={handleCloseHandlePointerDown}
+              onPointerUp={handleCloseHandlePointerUp}
+              onPointerCancel={handleCloseHandlePointerCancel}
+            >
+              <span />
+            </span>
+          </button>
 
-        {/* ── Match card ── */}
-        <div className={`live-event-page__match-card${isLiveMatch ? '' : ' live-event-page__match-card--prematch'}`}>
+          {/* ── Match card ── */}
+          <div className={`live-event-page__match-card${isLiveMatch ? '' : ' live-event-page__match-card--prematch'}`}>
 
           {/* League name */}
           <span className="live-event-page__league-name">{leagueName}</span>
@@ -2912,12 +2922,13 @@ export function LiveEventPage({
           setShouldRender(false)
           setIsClosing(false)
           closeTimerRef.current = null
+          onClose()
         }, LIVE_EVENT_TRANSITION_MS)
       }
     }, 0)
 
     return () => window.clearTimeout(timer)
-  }, [isOpen, shouldRender, isClosing])
+  }, [isOpen, onClose, shouldRender, isClosing])
 
   useEffect(() => () => {
     if (closeTimerRef.current !== null) {

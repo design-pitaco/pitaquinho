@@ -54,7 +54,7 @@
 /* Bottom Sheet Container */
 .bottom-sheet {
   position: relative;
-  background-color: #1a1a1a;
+  background-color: var(--tokens-layer-layer-01);
   border-radius: 8px 8px 0 0;
   width: 100%;
   /* Fallback for older browsers */
@@ -97,7 +97,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 12px 12px 20px;
-  border-bottom: 1px solid #242424;
+  border-bottom: 1px solid var(--tokens-border-border-02);
   flex-shrink: 0;
 }
 
@@ -120,14 +120,14 @@
   height: 24px;
   object-fit: contain;
   border-radius: 2px;
-  border: 1px solid #19954f;
+  border: 1px solid var(--color-feedback-positive-deep);
 }
 
 .bottom-sheet__title span {
   font-family: 'Red Hat Text', sans-serif;
   font-size: 14px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   line-height: 1.4;
 }
 
@@ -141,7 +141,7 @@
   border: none;
   cursor: pointer;
   padding: 0;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
 }
 
 .bottom-sheet__close-icon {
@@ -170,7 +170,7 @@
   left: 0;
   right: 0;
   height: 60px;
-  background: linear-gradient(to top, #1a1a1a 0%, transparent 100%);
+  background: linear-gradient(to top, var(--tokens-layer-layer-01) 0%, transparent 100%);
   pointer-events: none;
   transition: opacity 0.3s ease;
 }
@@ -182,7 +182,7 @@
 /* Footer - Fixed */
 .bottom-sheet__footer {
   padding: 20px;
-  border-top: 1px solid #242424;
+  border-top: 1px solid var(--tokens-border-border-02);
   flex-shrink: 0;
 }
 
@@ -191,7 +191,7 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 12px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   line-height: 1.4;
   padding: 0 20px;
   margin: 0 0 16px 0;
@@ -206,13 +206,13 @@
   align-items: center;
   gap: 4px;
   padding: 8px 20px;
-  border: 1px solid #242424;
+  border: 1px solid var(--tokens-border-border-02);
   border-radius: 4px 4px 0 0;
 }
 
 .mission-box__content {
-  background-color: #242424;
-  border: 1px solid #242424;
+  background-color: var(--tokens-layer-layer-03);
+  border: 1px solid var(--tokens-border-border-02);
   border-radius: 0 0 8px 8px;
   padding: 20px;
 }
@@ -221,7 +221,7 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 12px;
   font-weight: 500;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   line-height: 1.2;
   margin: 0 0 12px 0;
 }
@@ -244,7 +244,7 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 10px;
   font-weight: 400;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   line-height: 1;
 }
 
@@ -252,7 +252,7 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 12px;
   font-weight: 700;
-  color: #32a866;
+  color: var(--color-feedback-positive);
   line-height: 1.4;
 }
 
@@ -260,7 +260,7 @@
   position: relative;
   width: 100%;
   height: 6px;
-  background-color: #373737;
+  background-color: #373737; /* sem token equivalente no Figma */
   border-radius: 3px;
 }
 
@@ -269,7 +269,7 @@
   top: 0;
   left: 0;
   height: 100%;
-  background-color: #32a866;
+  background-color: var(--color-feedback-positive);
   border-radius: 3px;
   transition: width 0.3s ease;
 }
@@ -280,9 +280,9 @@
   transform: translate(-50%, -50%);
   width: 12px;
   height: 12px;
-  background-color: #32a866;
+  background-color: var(--color-feedback-positive);
   border-radius: 50%;
-  box-shadow: 0 0 0 2px #242424;
+  box-shadow: 0 0 0 2px var(--tokens-border-border-02);
   transition: left 0.3s ease;
 }
 
@@ -296,7 +296,7 @@
 .mission-timer__dot {
   width: 8px;
   height: 8px;
-  background-color: #c00a28;
+  background-color: var(--color-feedback-negative);
   border-radius: 50%;
 }
 
@@ -304,7 +304,7 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 10px;
   font-weight: 400;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   line-height: 1;
 }
 
@@ -318,7 +318,7 @@
 .mission-objective__radio {
   width: 16px;
   height: 16px;
-  border: 1px solid #32a866;
+  border: 1px solid var(--color-feedback-positive);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -327,11 +327,11 @@
 }
 
 .mission-objective__radio--completed {
-  background-color: #32a866;
+  background-color: var(--color-feedback-positive);
 }
 
 .mission-objective__check {
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   font-size: 10px;
 }
 
@@ -339,7 +339,7 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 10px;
   font-weight: 400;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   line-height: 1;
 }
 
@@ -354,7 +354,7 @@
   align-items: center;
   justify-content: space-between;
   padding-bottom: 16px;
-  border-bottom: 1px solid #242424;
+  border-bottom: 1px solid var(--tokens-border-border-02);
   cursor: pointer;
 }
 
@@ -362,7 +362,7 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 12px;
   font-weight: 700;
-  color: #32a866;
+  color: var(--color-feedback-positive);
   line-height: 1;
 }
 
@@ -370,7 +370,7 @@
   width: 16px;
   height: 16px;
   transform: rotate(-360deg);
-  color: #32a866;
+  color: var(--color-feedback-positive);
 }
 
 /* Mission Info Row */
@@ -379,7 +379,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 0;
-  border-bottom: 1px solid #242424;
+  border-bottom: 1px solid var(--tokens-border-border-02);
 }
 
 .mission-info-row:last-child {
@@ -390,7 +390,7 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 10px;
   font-weight: 400;
-  color: #e3e3e3;
+  color: var(--tokens-text-text-02);
   line-height: 1;
 }
 
@@ -398,7 +398,7 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 10px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   line-height: 1;
   text-align: right;
 }
@@ -413,7 +413,7 @@
   flex-direction: column;
   width: 100%;
   padding: 16px 0;
-  border-top: 1px solid #242424;
+  border-top: 1px solid var(--tokens-border-border-02);
 }
 
 .mission-faq-item:last-child {
@@ -435,26 +435,26 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 12px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   line-height: 1;
   text-align: left;
   transition: color 0.2s ease;
 }
 
 .mission-faq-item--expanded .mission-faq-item__question {
-  color: #32a866;
+  color: var(--color-feedback-positive);
 }
 
 .mission-faq-item__icon {
   width: 16px;
   height: 16px;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   transform: rotate(180deg);
   transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .mission-faq-item--expanded .mission-faq-item__icon {
-  color: #32a866;
+  color: var(--color-feedback-positive);
 }
 
 .mission-faq-item__icon--rotated {
@@ -475,7 +475,7 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 12px;
   font-weight: 400;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   line-height: 1.4;
   margin: 0;
   text-align: left;
@@ -492,7 +492,7 @@
 .bottom-sheet__btn-primary {
   width: 100%;
   padding: 14px 16px;
-  background-color: #32a866;
+  background-color: var(--color-feedback-positive);
   border: none;
   border-radius: 1000px;
   cursor: pointer;
@@ -502,6 +502,6 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 12px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   line-height: 1;
 }

@@ -11,7 +11,8 @@
   --sport-rail-label-translate-y: 0px;
   --sport-filter-padding-bottom: 20px;
   --home-market-sticky-top: 194px;
-  --home-market-sticky-bg-height: 266px;
+  --home-market-sticky-bg-height: 280px;
+  --home-sticky-header-gradient-height: 250px;
   --sports-carousel-padding-bottom: 20px;
   --sports-carousel-card-header-min-height: 34px;
   --sports-carousel-card-header-padding-y: 8px;
@@ -24,7 +25,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #131313;
+  background-color: var(--tokens-background-background);
   padding-top: 194px;
   padding-bottom: 60px;
   scrollbar-width: none;
@@ -63,6 +64,34 @@
   --sports-carousel-teams-padding-y: 8px;
   --sports-carousel-team-row-height: 12px;
   padding-top: var(--sport-header-padding-top);
+}
+
+.home .header::after {
+  content: '';
+  position: absolute;
+  top: 50px;
+  left: 0;
+  right: 0;
+  z-index: -40;
+  height: 52px;
+  background: linear-gradient(
+    180deg,
+    rgb(var(--tokens-background-background-on-color-dark-rgb) / 0.64) 0%,
+    rgb(var(--tokens-background-background-on-color-dark-rgb) / 0.32) 42%,
+    rgb(var(--tokens-background-background-on-color-dark-rgb) / 0) 100%
+  );
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+  transition: top var(--sport-header-transition);
+}
+
+.home:not(.home--casino-active)[data-market-sticky-engaged="true"] .header::after {
+  top: 100px;
+}
+
+.home .header--gradient-v3::after {
+  display: none;
 }
 
 .home--header-morph-active {
@@ -172,6 +201,36 @@
   transition: none;
 }
 
+:root[data-theme="dark"] .home[data-market-sticky-engaged="true"] .header,
+:root[data-theme="dark"] .home[data-market-sticky-rail-protection="true"] .header,
+:root[data-theme="dark"] .home[data-market-sticky-rail-clipped="true"] .header,
+:root[data-theme="light"] .home[data-market-sticky-engaged="true"] .header,
+:root[data-theme="light"] .home[data-market-sticky-rail-protection="true"] .header,
+:root[data-theme="light"] .home[data-market-sticky-rail-clipped="true"] .header {
+  --header-gradient-height: var(--home-sticky-header-gradient-height, 250px);
+}
+
+:root[data-theme="dark"] .home:is(
+  [data-market-sticky-engaged="true"],
+  [data-market-sticky-rail-protection="true"],
+  [data-market-sticky-rail-clipped="true"]
+) .header--gradient-v3 .header__bg-dark,
+:root[data-theme="light"] .home:is(
+  [data-market-sticky-engaged="true"],
+  [data-market-sticky-rail-protection="true"],
+  [data-market-sticky-rail-clipped="true"]
+) .header--gradient-v3 .header__bg-dark {
+  height: 209px !important;
+}
+
+:root[data-theme="light"] .home:is(
+  [data-market-sticky-engaged="true"],
+  [data-market-sticky-rail-protection="true"],
+  [data-market-sticky-rail-clipped="true"]
+) .header--gradient-v3 .header__bg-light {
+  height: 209px !important;
+}
+
 /* Home sem dividers */
 .home--no-dividers .promotion-section,
 .home--no-dividers .offers-section,
@@ -210,6 +269,11 @@
     -webkit-overflow-scrolling: touch;
     padding-bottom: var(--navbar-page-bottom-padding);
     scroll-padding-bottom: var(--navbar-page-bottom-padding);
+  }
+
+  :root[data-betslip-compact-visible] .home {
+    padding-bottom: var(--betslip-page-bottom-padding);
+    scroll-padding-bottom: var(--betslip-page-bottom-padding);
   }
 
   .home

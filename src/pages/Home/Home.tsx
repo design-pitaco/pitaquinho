@@ -1,5 +1,5 @@
-import { Fragment, useCallback, useRef, useState, useLayoutEffect, useMemo, type ComponentType, type ReactNode } from 'react'
-import { Header } from '../../components/Header'
+import { Fragment, Suspense, lazy, useCallback, useRef, useState, useLayoutEffect, useMemo, type ComponentType, type ReactNode } from 'react'
+import { HeaderV2 } from '../../components/HeaderV2'
 import { TrilhoEBanner } from '../../components/TrilhoEBanner'
 import { PromotionSection } from '../../components/PromotionSection'
 import { OffersSection } from '../../components/OffersSection'
@@ -12,14 +12,15 @@ import { CompetitionPage } from '../../components/CompetitionPage'
 import { SportRail } from '../../components/SportRail'
 import { CasinoRail } from '../../components/CasinoRail'
 import { CasinoContent, casinoCarouselSections } from '../../components/CasinoContent'
-import { LiveEventPage } from '../LiveEventPage'
-import { CasinoGamePage } from '../CasinoGamePage'
 import { casinoBanners, casinoPromotions, sportsPromotions } from '../../data/homeProducts'
 import type { LiveEventOpenPayload } from '../LiveEventPage'
 import type { CasinoGameOpenPayload } from '../../components/CasinoContent'
 import type { Banner, CasinoCategoryId, ProductMode } from '../../types/home'
 import type { CompetitionLinkTarget } from '../../utils/competitionNavigation'
 import './Home.css'
+
+const LiveEventPage = lazy(() => import('../LiveEventPage').then((m) => ({ default: m.LiveEventPage })))
+const CasinoGamePage = lazy(() => import('../CasinoGamePage').then((m) => ({ default: m.CasinoGamePage })))
 
 const HEADER_COMPACT_SCROLL_TOP = 28
 const HEADER_EXPAND_SCROLL_TOP = 4
@@ -71,14 +72,18 @@ interface HeaderComponentProps {
   activeSport?: string | null
   rail?: ReactNode
   onProductChange?: (product: ProductMode) => void
+  onLogoDoubleClick?: () => void
+  onDepositOpen?: () => void
   children?: ReactNode
 }
 
 interface HomeProps {
   activeProduct?: ProductMode
   HeaderComponent?: ComponentType<HeaderComponentProps>
-  isV2?: boolean
+  isLiveEventSuppressed?: boolean
   onProductChange?: (product: ProductMode) => void
+  onLogoDoubleClick?: () => void
+  onDepositOpen?: () => void
   onLiveEventOpenChange?: (isOpen: boolean) => void
   onLiveEventOpenSettled?: () => void
   onLiveEventCloseStart?: () => void
@@ -86,9 +91,11 @@ interface HomeProps {
 
 export function Home({
   activeProduct = 'apostas',
-  HeaderComponent = Header,
-  isV2 = false,
+  HeaderComponent = HeaderV2,
+  isLiveEventSuppressed = false,
   onProductChange,
+  onLogoDoubleClick,
+  onDepositOpen,
   onLiveEventOpenChange,
   onLiveEventOpenSettled,
   onLiveEventCloseStart,
@@ -139,6 +146,10 @@ export function Home({
   const handleLiveEventCloseStart = useCallback(() => {
     onLiveEventCloseStart?.()
   }, [onLiveEventCloseStart])
+
+  if (isLiveEventSuppressed && selectedLiveMatch) {
+    setSelectedLiveMatch(null)
+  }
 
   const handleCasinoGameOpen = (payload: CasinoGameOpenPayload) => {
     setSelectedCasinoGame(payload)
@@ -721,7 +732,7 @@ export function Home({
     'home--novo-trilho',
     'home--no-dividers',
     'home--liquid-glass-new',
-    isV2 ? 'home--v2' : '',
+    'home--v2',
     activeProduct === 'cassino' ? 'home--casino-active' : '',
     displayActiveSport ? 'home--sport-active' : '',
     usesHeaderEventRail ? 'home--event-rail-active' : '',
@@ -737,6 +748,8 @@ export function Home({
       <HeaderComponent
         activeProduct={activeProduct}
         activeSport={displayActiveSport}
+        onDepositOpen={onDepositOpen}
+        onLogoDoubleClick={onLogoDoubleClick}
         onProductChange={onProductChange}
         rail={headerRail}
       >
@@ -785,6 +798,7 @@ export function Home({
               sport={displayActiveSport}
               competitionId={selectedCompetition.id}
               onLiveMatchClick={handleLiveMatchClick}
+              onOpenCompetition={handleOpenCompetition}
             />
           ) : (
             <>
@@ -800,12 +814,12 @@ export function Home({
       ) : (
         <Fragment key={`destaques-${contentResetKey}`}>
           {/* <ContentTabs /> */}
+          <OffersSection />
           <PromotionSection promotions={sportsPromotions} />
           <LiveSection
             onMatchClick={handleLiveMatchClick}
             onOpenCompetition={handleOpenCompetition}
           />
-          <OffersSection />
           <PreMatchSection
             onOpenCompetition={handleOpenCompetition}
             onMatchClick={handleLiveMatchClick}
@@ -814,29 +828,33 @@ export function Home({
           {/* <WinningNowSection /> */}
         </Fragment>
       )}
-      {selectedLiveMatch && (
-        <LiveEventPage
-          isOpen={true}
-          onClose={handleLiveEventClose}
-          onOpenSettled={onLiveEventOpenSettled}
-          onCloseStart={handleLiveEventCloseStart}
-          matches={selectedLiveMatch.matches}
-          railEvents={selectedLiveMatch.railEvents}
-          selectedIndex={selectedLiveMatch.selectedIndex}
-          currentTimes={selectedLiveMatch.currentTimes}
-          leagueName={selectedLiveMatch.leagueName}
-          leagueFlag={selectedLiveMatch.leagueFlag}
-          sport={selectedLiveMatch.sport}
-        />
+      {selectedLiveMatch && !isLiveEventSuppressed && (
+        <Suspense fallback={null}>
+          <LiveEventPage
+            isOpen={true}
+            onClose={handleLiveEventClose}
+            onOpenSettled={onLiveEventOpenSettled}
+            onCloseStart={handleLiveEventCloseStart}
+            matches={selectedLiveMatch.matches}
+            railEvents={selectedLiveMatch.railEvents}
+            selectedIndex={selectedLiveMatch.selectedIndex}
+            currentTimes={selectedLiveMatch.currentTimes}
+            leagueName={selectedLiveMatch.leagueName}
+            leagueFlag={selectedLiveMatch.leagueFlag}
+            sport={selectedLiveMatch.sport}
+          />
+        </Suspense>
       )}
       {selectedCasinoGame && (
-        <CasinoGamePage
-          isOpen={true}
-          onClose={() => setSelectedCasinoGame(null)}
-          games={selectedCasinoGame.section.games}
-          selectedIndex={selectedCasinoGame.selectedIndex}
-          sectionTitle={selectedCasinoGame.section.title}
-        />
+        <Suspense fallback={null}>
+          <CasinoGamePage
+            isOpen={true}
+            onClose={() => setSelectedCasinoGame(null)}
+            games={selectedCasinoGame.section.games}
+            selectedIndex={selectedCasinoGame.selectedIndex}
+            sectionTitle={selectedCasinoGame.section.title}
+          />
+        </Suspense>
       )}
     </div>
   )

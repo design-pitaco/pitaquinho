@@ -1,8 +1,10 @@
-import { useLayoutEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, useState, type MouseEvent, type PointerEvent, type ReactNode } from 'react'
 import { flushSync } from 'react-dom'
 import { ListIcon } from '@phosphor-icons/react'
 import './HeaderV2.css'
 import logoReidoPitaco from '../../assets/logoReidoPitaco.svg'
+import logoReidoPitacoLight from '../../assets/logoReidoPitacoLight.svg'
+import { NavigationMenuBottomSheet } from '../NavigationMenuBottomSheet'
 import type { ProductMode } from '../../types/home'
 import { productLabels } from '../../data/homeProducts'
 
@@ -13,6 +15,8 @@ interface HeaderV2Props {
   showMenuButton?: boolean
   changeProductOnPointerDown?: boolean
   onProductChange?: (product: ProductMode) => void
+  onLogoDoubleClick?: () => void
+  onDepositOpen?: () => void
   children?: ReactNode
 }
 
@@ -20,6 +24,9 @@ const balanceDisplayOptions = ['R$ 3.400,00', 'R$ 3.400', 'R$ 3.4k']
 const headerLogoExpandedWidth = 103
 const headerLogoCompactWidth = 96
 const headerMinimumControlGap = 20
+const headerLogoDoubleTapDelay = 650
+const headerLogoActivationCooldown = 300
+const headerLogoLongPressDelay = 550
 
 export function HeaderV2({
   activeProduct = 'apostas',
@@ -28,6 +35,8 @@ export function HeaderV2({
   showMenuButton = true,
   changeProductOnPointerDown = true,
   onProductChange,
+  onLogoDoubleClick,
+  onDepositOpen,
   children,
 }: HeaderV2Props = {}) {
   const isSportPage = !!activeSport && activeSport !== 'destaques'
@@ -36,15 +45,19 @@ export function HeaderV2({
   const [isLogoCompact, setIsLogoCompact] = useState(false)
   const [displayProduct, setDisplayProduct] = useState<ProductMode>(activeProduct)
   const [isToggleSwitching, setIsToggleSwitching] = useState(false)
+  const [isNavigationMenuOpen, setIsNavigationMenuOpen] = useState(false)
   const headerTopRef = useRef<HTMLDivElement>(null)
   const toggleRef = useRef<HTMLButtonElement>(null)
   const accountActionsRef = useRef<HTMLDivElement>(null)
-  const balanceRef = useRef<HTMLDivElement>(null)
+  const balanceRef = useRef<HTMLButtonElement>(null)
   const balanceLabelRef = useRef<HTMLSpanElement>(null)
   const balanceValueRef = useRef<HTMLSpanElement>(null)
   const balanceMeasureRefs = useRef<(HTMLSpanElement | null)[]>([])
   const pointerProductChangeRef = useRef<ProductMode | null>(null)
   const pointerProductChangeResetTimerRef = useRef<number | null>(null)
+  const lastLogoTapTimeRef = useRef(0)
+  const lastLogoActivationTimeRef = useRef(0)
+  const logoLongPressTimerRef = useRef<number | null>(null)
   const toggleSwitchingFrameRef = useRef<number | null>(null)
   const toggleSwitchingResetTimerRef = useRef<number | null>(null)
 
@@ -53,6 +66,13 @@ export function HeaderV2({
 
     window.clearTimeout(pointerProductChangeResetTimerRef.current)
     pointerProductChangeResetTimerRef.current = null
+  }
+
+  const clearLogoLongPressTimer = () => {
+    if (logoLongPressTimerRef.current === null) return
+
+    window.clearTimeout(logoLongPressTimerRef.current)
+    logoLongPressTimerRef.current = null
   }
 
   const clearToggleSwitchingTimers = () => {
@@ -119,6 +139,51 @@ export function HeaderV2({
     scheduleProductChange(displayProduct === 'apostas' ? 'cassino' : 'apostas')
   }
 
+  const openFeatureFlagsFromLogo = () => {
+    if (!onLogoDoubleClick) return
+
+    const currentTime = Date.now()
+    if (currentTime - lastLogoActivationTimeRef.current <= headerLogoActivationCooldown) return
+
+    clearLogoLongPressTimer()
+    lastLogoActivationTimeRef.current = currentTime
+    lastLogoTapTimeRef.current = 0
+    onLogoDoubleClick()
+  }
+
+  const handleLogoPointerDown = (event: PointerEvent<HTMLButtonElement>) => {
+    if (!onLogoDoubleClick) return
+    if (event.pointerType === 'mouse' && event.button !== 0) return
+
+    clearLogoLongPressTimer()
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+    logoLongPressTimerRef.current = window.setTimeout(() => {
+      openFeatureFlagsFromLogo()
+    }, headerLogoLongPressDelay)
+  }
+
+  const handleLogoPointerEnd = () => {
+    clearLogoLongPressTimer()
+  }
+
+  const handleLogoClick = (event: MouseEvent<HTMLButtonElement>) => {
+    if (!onLogoDoubleClick) return
+    if (event.detail >= 2) {
+      openFeatureFlagsFromLogo()
+      return
+    }
+
+    const currentTime = Date.now()
+    const elapsedTime = currentTime - lastLogoTapTimeRef.current
+
+    if (elapsedTime > 0 && elapsedTime <= headerLogoDoubleTapDelay) {
+      openFeatureFlagsFromLogo()
+      return
+    }
+
+    lastLogoTapTimeRef.current = currentTime
+  }
+
   useLayoutEffect(() => {
     const timer = window.setTimeout(() => {
       setDisplayProduct(activeProduct)
@@ -129,6 +194,7 @@ export function HeaderV2({
 
   useLayoutEffect(() => () => {
     clearPointerProductChangeResetTimer()
+    clearLogoLongPressTimer()
     clearToggleSwitchingTimers()
   }, [])
 
@@ -233,6 +299,7 @@ export function HeaderV2({
       className={[
         'header',
         'header--v2',
+        'header--gradient-v3',
         isSportPage ? 'header--sport-active' : 'header--competition-rail',
         'header--liquid-glass',
         'header--liquid-glass-new',
@@ -242,13 +309,34 @@ export function HeaderV2({
         .filter(Boolean)
         .join(' ')}
     >
+      <div className="header__bg-light" />
       <div className="header__bg-dark" />
       <div className="header__bg-gradient" />
 
       <div className="header__top" ref={headerTopRef}>
-        <div className="header__logo">
-          <img src={logoReidoPitaco} alt="Rei do Pitaco" />
-        </div>
+        {onLogoDoubleClick ? (
+          <button
+            type="button"
+            className="header__logo header__logo-button"
+            aria-label="Abrir feature flags"
+            aria-haspopup="dialog"
+            onPointerDown={handleLogoPointerDown}
+            onPointerUp={handleLogoPointerEnd}
+            onPointerCancel={handleLogoPointerEnd}
+            onPointerLeave={handleLogoPointerEnd}
+            onClick={handleLogoClick}
+            onDoubleClick={openFeatureFlagsFromLogo}
+            onContextMenu={(event) => event.preventDefault()}
+          >
+            <img src={logoReidoPitaco} alt="Rei do Pitaco" className="header__logo-img header__logo-img--dark" />
+            <img src={logoReidoPitacoLight} alt="Rei do Pitaco" className="header__logo-img header__logo-img--light" />
+          </button>
+        ) : (
+          <div className="header__logo">
+            <img src={logoReidoPitaco} alt="Rei do Pitaco" className="header__logo-img header__logo-img--dark" />
+            <img src={logoReidoPitacoLight} alt="Rei do Pitaco" className="header__logo-img header__logo-img--light" />
+          </div>
+        )}
 
         <button
           ref={toggleRef}
@@ -283,7 +371,13 @@ export function HeaderV2({
           ref={accountActionsRef}
           style={{ width: `${accountActionsWidth}px` }}
         >
-          <div className="header__balance" aria-label={`Saldo disponível: ${balanceDisplayOptions[0]}`} ref={balanceRef}>
+          <button
+            type="button"
+            className="header__balance"
+            aria-label={`Abrir depósito. Saldo disponível: ${balanceDisplayOptions[0]}`}
+            ref={balanceRef}
+            onClick={onDepositOpen}
+          >
             <span className="header__balance-label" ref={balanceLabelRef}>Saldo</span>
             <span className="header__balance-value" ref={balanceValueRef}>{balanceDisplayValue}</span>
             <span className="header__balance-measure" aria-hidden="true">
@@ -297,9 +391,15 @@ export function HeaderV2({
                 </span>
               ))}
             </span>
-          </div>
+          </button>
           {showMenuButton && (
-            <button type="button" className="header__menu-btn" aria-label="Abrir menu">
+            <button
+              type="button"
+              className="header__menu-btn"
+              aria-label="Abrir menu"
+              aria-expanded={isNavigationMenuOpen}
+              onClick={() => setIsNavigationMenuOpen(true)}
+            >
               <ListIcon aria-hidden="true" className="header__menu-icon" weight="bold" />
             </button>
           )}
@@ -308,6 +408,13 @@ export function HeaderV2({
 
       {rail}
       {children}
+      {showMenuButton && (
+        <NavigationMenuBottomSheet
+          isOpen={isNavigationMenuOpen}
+          onDepositOpen={onDepositOpen}
+          onClose={() => setIsNavigationMenuOpen(false)}
+        />
+      )}
     </header>
   )
 }

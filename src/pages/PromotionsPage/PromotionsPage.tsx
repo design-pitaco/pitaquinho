@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ComponentType, type ReactNode } from 'react'
-import { Header } from '../../components/Header'
+import { HeaderV2 } from '../../components/HeaderV2'
 import { useSlidingActiveIndicator } from '../../hooks/useSlidingActiveIndicator'
 import type { ProductMode } from '../../types/home'
 import { PromotionsMissionsSection } from './PromotionsMissionsSection'
@@ -12,14 +12,17 @@ interface HeaderComponentProps {
   activeProduct?: ProductMode
   changeProductOnPointerDown?: boolean
   onProductChange?: (product: ProductMode) => void
+  onLogoDoubleClick?: () => void
+  onDepositOpen?: () => void
   children?: ReactNode
 }
 
 interface PromotionsPageProps {
   activeProduct?: ProductMode
   HeaderComponent?: ComponentType<HeaderComponentProps>
-  isV2?: boolean
   onProductChange?: (product: ProductMode) => void
+  onLogoDoubleClick?: () => void
+  onDepositOpen?: () => void
 }
 
 const HEADER_COMPACT_SCROLL_TOP = 28
@@ -52,9 +55,10 @@ const getTranslateXFromTransform = (transform: string) => {
 
 export function PromotionsPage({
   activeProduct = 'apostas',
-  HeaderComponent = Header,
-  isV2 = false,
+  HeaderComponent = HeaderV2,
   onProductChange,
+  onLogoDoubleClick,
+  onDepositOpen,
 }: PromotionsPageProps = {}) {
   const pageRef = useRef<HTMLDivElement>(null)
   const tabsTrackRef = useRef<HTMLDivElement>(null)
@@ -77,20 +81,12 @@ export function PromotionsPage({
   const [activeFilter, setActiveFilter] = useState<PromotionsFilterId>('todos')
   const [isHeaderCompact, setIsHeaderCompact] = useState(false)
 
-  const scrollPageToTop = () => {
-    pageRef.current?.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-    setIsHeaderCompact(false)
-  }
-
   const handleFilterClick = (filterId: PromotionsFilterId) => {
     setActiveFilter(filterId)
-    scrollPageToTop()
   }
 
   useSlidingActiveIndicator({
     activeKey: activeFilter,
-    refreshKey: isHeaderCompact,
     containerRef: filtersRef,
     getActiveElement: () => filterRefs.current[activeFilter],
   })
@@ -228,7 +224,7 @@ export function PromotionsPage({
       className={[
         'promotions-page',
         'promotions-page--liquid-glass-new',
-        isV2 ? 'promotions-page--v2' : '',
+        'promotions-page--v2',
         isHeaderCompact ? 'promotions-page--header-compact' : '',
       ]
         .filter(Boolean)
@@ -238,6 +234,8 @@ export function PromotionsPage({
       <HeaderComponent
         activeProduct={activeProduct}
         changeProductOnPointerDown={false}
+        onDepositOpen={onDepositOpen}
+        onLogoDoubleClick={onLogoDoubleClick}
         onProductChange={onProductChange}
       >
         <nav className="promotions-page__tabs" aria-label="Seções de promoções">

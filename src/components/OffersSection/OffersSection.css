@@ -3,7 +3,7 @@
   flex-direction: column;
   gap: 12px;
   padding: 0 0 24px 0;
-  border-bottom: 2px solid #242424;
+  border-bottom: 2px solid var(--tokens-border-border-02);
 }
 
 /* Header */
@@ -21,7 +21,7 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 16px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   line-height: 1.4;
 }
 
@@ -48,18 +48,28 @@
 .offers-section__chip {
   position: relative;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
   height: 24px;
   padding: 0 16px;
   border-radius: 160px;
   border: none;
-  background-color: #1A1A1A;
+  background-color: var(--tokens-layer-layer-01);
   font-family: 'Red Hat Text', sans-serif;
   font-size: 11px;
   font-weight: 700;
-  color: #a8a8a8;
+  color: var(--tokens-text-text-02);
   white-space: nowrap;
   cursor: pointer;
+}
+
+.offers-section__chip span {
+  position: relative;
+  z-index: 2;
+  color: inherit;
+  transform: translateZ(0);
 }
 
 .home--v2 .offers-section__chip {
@@ -68,7 +78,7 @@
 
 .offers-section__chip--active {
   background: transparent;
-  color: #ffffff;
+  color: var(--tokens-text-text-on-color-white);
   position: relative;
 }
 
@@ -110,13 +120,24 @@
   flex-shrink: 0;
   width: 304px;
   scroll-snap-align: start;
-  background-color: #1A1A1A;
+  background-color: var(--tokens-layer-layer-01);
   border-radius: 12px;
   padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   position: relative;
+}
+
+.offer-card--pechincha {
+  background:
+    linear-gradient(
+      180deg,
+      rgb(var(--primitives-brand-purple-brand-purple-400-rgb, 151 48 255) / 0.12) 0%,
+      rgb(var(--primitives-brand-purple-brand-purple-700-rgb, 69 20 118) / 0.12) 28%,
+      rgb(var(--tokens-layer-layer-01-rgb, 26 26 26) / 0.12) 60%
+    ),
+    var(--Tokens-layer-layer-01, #1A1A1A);
 }
 
 /* Border gradiente */
@@ -126,7 +147,7 @@
   inset: 0;
   border-radius: 12px;
   padding: 1px;
-  background: linear-gradient(to top right, rgba(26, 26, 26, 1) 0%, rgba(26, 26, 26, 1) 64%, #DC2626 100%);
+  background: linear-gradient(to top right, var(--tokens-background-background) 0%, var(--tokens-background-background) 64%, var(--primitives-red-red-500) 100%);
   -webkit-mask: 
     linear-gradient(#fff 0 0) content-box, 
     linear-gradient(#fff 0 0);
@@ -137,22 +158,22 @@
 
 /* Super Aumentada - gradiente azul */
 .offer-card--super-aumentada::before {
-  background: linear-gradient(to top right, rgba(26, 26, 26, 1) 0%, rgba(26, 26, 26, 1) 64%, #60A5FA 100%);
+  background: linear-gradient(to top right, var(--tokens-background-background) 0%, var(--tokens-background-background) 64%, var(--primitives-blue-blue-300) 100%);
 }
 
 /* Aumentada - gradiente amarelo */
 .offer-card--aumentada::before {
-  background: linear-gradient(to top right, rgba(26, 26, 26, 1) 0%, rgba(26, 26, 26, 1) 64%, #EAB308 100%);
+  background: linear-gradient(to top right, var(--tokens-background-background) 0%, var(--tokens-background-background) 64%, var(--primitives-yellow-yellow-400) 100%);
 }
 
 /* Pechincha - gradiente verde */
 .offer-card--pechincha::before {
-  background: linear-gradient(to top right, rgba(26, 26, 26, 1) 0%, rgba(26, 26, 26, 1) 64%, #9730FF 100%);
+  background: linear-gradient(to top right, var(--tokens-background-background) 0%, var(--tokens-background-background) 64%, var(--primitives-brand-purple-brand-purple-400) 100%);
 }
 
 /* Super Combinada - gradiente roxo */
 .offer-card--super-combinada::before {
-  background: linear-gradient(to top right, rgba(26, 26, 26, 1) 0%, rgba(26, 26, 26, 1) 64%, #9730FF 100%);
+  background: linear-gradient(to top right, var(--tokens-background-background) 0%, var(--tokens-background-background) 64%, var(--primitives-brand-purple-brand-purple-400) 100%);
 }
 
 .offer-card__header {
@@ -167,7 +188,7 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 14px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   line-height: 1.4;
   margin: 0;
 }
@@ -199,7 +220,7 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 11px;
   font-weight: 400;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   opacity: 0.56;
   min-width: 0;
   overflow: hidden;
@@ -212,7 +233,7 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 11px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   flex-shrink: 0;
 }
 
@@ -244,7 +265,7 @@
   top: 6px;
   bottom: 6px;
   width: 1px;
-  border-left: 1px dashed rgba(255, 255, 255, 0.4);
+  border-left: 1px dashed var(--tokens-text-text-02);
   z-index: 0;
 }
 
@@ -262,7 +283,7 @@
   object-fit: contain;
   position: relative;
   z-index: 2;
-  background-color: #1A1A1A;
+  background-color: var(--tokens-layer-layer-01);
   border-radius: 50%;
 }
 
@@ -277,19 +298,19 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 12px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
 }
 
 .offer-card__event-dot {
   font-size: 8px;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
 }
 
 .offer-card__event-market {
   font-family: 'Red Hat Text', sans-serif;
   font-size: 11px;
   font-weight: 400;
-  color: #e3e3e3;
+  color: var(--tokens-text-text-02);
 }
 
 .offer-card__event-vs {
@@ -299,15 +320,37 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 11px;
   font-weight: 700;
-  color: #d9d9d9;
+  color: var(--tokens-text-text-02);
 }
 
 /* Player */
 .offer-card__player {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 16px;
+  justify-content: center;
   min-height: 58px;
+}
+
+.offer-card__player-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+.offer-card__player-main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0 12px;
+  min-width: 0;
+}
+
+.offer-card--pechincha .offer-card__player-main {
+  height: 100%;
+  align-items: center;
 }
 
 .offer-card__player-avatar {
@@ -322,14 +365,14 @@
   height: 40px;
   border-radius: 100px;
   object-fit: cover;
-  background-color: #202020;
+  background-color: var(--tokens-layer-layer-02);
 }
 
 .offer-card__player-badge {
   position: absolute;
   width: 18px;
   height: 18px;
-  background-color: #202020;
+  background-color: var(--tokens-layer-layer-02);
   border-radius: 4px;
   box-sizing: border-box;
   display: flex;
@@ -347,13 +390,13 @@
   height: 12px;
   display: block;
   flex-shrink: 0;
-  background-color: #9ecc30;
+  background-color: var(--tokens-layer-layer-04);
   -webkit-mask: url('../../assets/icon-stats.svg') center / contain no-repeat;
   mask: url('../../assets/icon-stats.svg') center / contain no-repeat;
 }
 
 .offer-card__player-badge--sport {
-  bottom: -5px;
+  bottom: -2px;
   right: -9px;
   border-radius: 50%;
 }
@@ -361,12 +404,11 @@
 .offer-card__player-badge--stat {
   top: 0px;
   right: -9px;
-  background-color: #202020;
+  background-color: var(--tokens-layer-layer-02);
   border-radius: 4px;
 }
 
 .offer-card__player-info {
-  flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -377,7 +419,7 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 14px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   line-height: 1.4;
   white-space: nowrap;
   overflow: hidden;
@@ -388,7 +430,7 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 11px;
   font-weight: 400;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
 }
 
 .offer-card__player-stat {
@@ -402,7 +444,7 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 14px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   line-height: 1.4;
   text-align: right;
   white-space: nowrap;
@@ -417,7 +459,7 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 11px;
   font-weight: 400;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   text-align: right;
   white-space: nowrap;
   overflow: hidden;
@@ -428,16 +470,56 @@
 
 /* Button */
 .offer-card__button {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
   height: 40px;
-  background-color: #202020;
-  color: #ffffff;
-  border: 0;
+  background-color: var(--tokens-button-button-odds-02);
+  color: var(--tokens-text-text-01);
+  border: 1px solid transparent;
   border-radius: 12px;
   padding: 0;
   width: 100%;
+}
+
+.offer-card__button--pechincha {
+  justify-content: center;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 12px;
+}
+
+.offer-card__rules {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0;
+  list-style: none;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  color: var(--tokens-text-text-02);
+  font-family: 'Red Hat Text', sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.2;
+  text-align: left;
+}
+
+.offer-card__rules li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.offer-card__rules li::before {
+  content: '•';
+  flex: 0 0 auto;
 }
 
 .offer-card__odds {
@@ -446,11 +528,16 @@
   gap: 8px;
 }
 
+.offer-card__button--pechincha .offer-card__odds {
+  flex: 0 0 auto;
+  justify-content: center;
+}
+
 .offer-card__old-odd {
   font-family: 'Red Hat Text', sans-serif;
   font-size: 11px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   text-decoration: line-through;
 }
 
@@ -461,11 +548,24 @@
   filter: brightness(0) invert(1);
 }
 
+:root[data-theme="light"] .offer-card__button:not(.odd-button--selected) .offer-card__boost-icon,
+:root[data-theme="light"] .offer-card__player-event-arrow {
+  filter: brightness(0);
+}
+
+.offer-card__button.odd-button--selected .offer-card__boost-icon {
+  filter: brightness(0) invert(1);
+}
+
+:root[data-theme="light"] .offer-card__button.odd-button--selected .offer-card__boost-icon {
+  filter: brightness(0);
+}
+
 .offer-card__new-odd {
   font-family: 'Red Hat Text', sans-serif;
   font-size: 12px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
 }
 
 /* Player Events (para combinadas com jogadores) */
@@ -483,7 +583,7 @@
   top: 6px;
   bottom: 6px;
   width: 0;
-  border-left: 1px dashed #646464;
+  border-left: 1px dashed #646464; /* sem token equivalente no Figma */
 }
 
 .offer-card__player-event {
@@ -501,7 +601,7 @@
   flex-shrink: 0;
   position: relative;
   z-index: 2;
-  background-color: #1A1A1A;
+  background-color: var(--tokens-layer-layer-01);
   border-radius: 50%;
 }
 
@@ -516,21 +616,21 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 12px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   white-space: nowrap;
 }
 
 .offer-card__player-event-dot {
   font-family: 'Red Hat Text', sans-serif;
   font-size: 12px;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
 }
 
 .offer-card__player-event-value {
   font-family: 'Red Hat Text', sans-serif;
   font-size: 12px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   white-space: nowrap;
   display: flex;
   align-items: center;
@@ -549,14 +649,14 @@
 }
 
 .offer-card__player-event-new-value {
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
 }
 
 .offer-card__player-event-market {
   font-family: 'Red Hat Text', sans-serif;
   font-size: 11px;
   font-weight: 400;
-  color: #a0a0a0;
+  color: var(--tokens-text-text-02);
   white-space: nowrap;
 }
 
@@ -577,6 +677,16 @@
   flex-grow: 0;
 }
 
+.offer-card__footer--with-rules {
+  justify-content: space-between;
+}
+
+.offer-card__footer--with-rules .offer-card__button {
+  width: 140px;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+
 .offer-card__viewall {
   display: flex;
   align-items: center;
@@ -591,13 +701,13 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 11px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
 }
 
 .offer-card__viewall-icon {
   width: 16px;
   height: 16px;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
 }
 
 /* Team Stat (for team-based super aumentada) */
@@ -622,7 +732,7 @@
   left: 0;
   width: 40px;
   height: 40px;
-  background-color: #202020;
+  background-color: var(--tokens-layer-layer-02);
   border-radius: 50%;
 }
 
@@ -643,7 +753,7 @@
   right: -4px;
   width: 16px;
   height: 16px;
-  background-color: #202020;
+  background-color: var(--tokens-layer-layer-02);
   border-radius: 4px;
   box-sizing: border-box;
   display: flex;
@@ -667,7 +777,7 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 14px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--tokens-text-text-01);
   line-height: 1.4;
 }
 
@@ -675,6 +785,6 @@
   font-family: 'Red Hat Text', sans-serif;
   font-size: 11px;
   font-weight: 400;
-  color: #a0a0a0;
+  color: var(--tokens-text-text-02);
   line-height: 1;
 }

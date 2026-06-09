@@ -19,6 +19,8 @@ export interface BetslipSelection {
   eventStatus: BetslipEventStatus
   selectionType: BetslipSelectionType
   sport?: string
+  leagueId?: string
+  leagueName?: string
   homeTeam?: string
   awayTeam?: string
   eventName?: string
@@ -53,6 +55,8 @@ export interface BetslipSelectionInput {
   eventStatus?: BetslipEventStatus
   selectionType?: BetslipSelectionType
   sport?: string
+  leagueId?: string
+  leagueName?: string
   homeTeam?: string
   awayTeam?: string
   eventName?: string
@@ -89,16 +93,25 @@ export interface BetslipSummary {
 
 export const BETSLIP_STAKE = 10
 
+const betslipDecimalFormatter = new Intl.NumberFormat('pt-BR', {
+  maximumFractionDigits: 2,
+  minimumFractionDigits: 2,
+})
+
+export const formatBetslipOdd = (odd: number) => `${odd.toFixed(2)}x`
+
+export const formatBetslipCurrency = (value: number) => `R$${betslipDecimalFormatter.format(value)}`
+
 export const EMPTY_BETSLIP_SUMMARY: BetslipSummary = {
   hasSelections: false,
   selectedOddsCount: 0,
   selectionCount: 0,
   totalOdds: 0,
-  totalOddsLabel: '0.00x',
+  totalOddsLabel: formatBetslipOdd(0),
   stake: BETSLIP_STAKE,
-  stakeLabel: 'R$10,00',
+  stakeLabel: formatBetslipCurrency(BETSLIP_STAKE),
   potentialWin: 0,
-  potentialWinLabel: 'R$0,00',
+  potentialWinLabel: formatBetslipCurrency(0),
 }
 
 const getNodeText = (node: ReactNode): string => {
@@ -154,15 +167,14 @@ export const getBetslipEventId = ({
 }
 
 export const parseBetslipOdd = (odd: ReactNode) => {
-  const oddLabel = getNodeText(odd).replace(',', '.')
-  const oddValue = Number.parseFloat(oddLabel.replace(/[^0-9.]/g, ''))
+  const oddLabel = getNodeText(odd).trim()
+  const normalizedOddLabel = oddLabel.includes(',')
+    ? oddLabel.replace(/\./g, '').replace(',', '.')
+    : oddLabel
+  const oddValue = Number.parseFloat(normalizedOddLabel.replace(/[^0-9.]/g, ''))
 
   return Number.isFinite(oddValue) && oddValue > 0 ? oddValue : null
 }
-
-export const formatBetslipOdd = (odd: number) => `${odd.toFixed(2)}x`
-
-export const formatBetslipCurrency = (value: number) => `R$${value.toFixed(2).replace('.', ',')}`
 
 const formatBetslipMarketLabel = (marketId: string) => (
   marketId
@@ -226,6 +238,8 @@ export const createBetslipSelection = ({
   eventStatus = 'prematch',
   selectionType,
   sport,
+  leagueId,
+  leagueName,
   homeTeam,
   awayTeam,
   eventName,
@@ -276,6 +290,8 @@ export const createBetslipSelection = ({
       awayTeam,
     }),
     sport,
+    leagueId,
+    leagueName,
     homeTeam,
     awayTeam,
     eventName: getBetslipEventName({

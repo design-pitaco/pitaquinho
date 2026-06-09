@@ -8,12 +8,12 @@ import type {
   Promotion,
 } from '../types/home'
 
-import bg1x2 from '../assets/bg1x2.png'
-import bgAumentada from '../assets/bgAumentada.png'
+import bg1x2 from '../assets/bg1x2.webp'
+import bgAumentada from '../assets/bgAumentada.webp'
 import bgVirtuais from '../assets/bgVirtuais.png'
-import bgAoVivoBasquete from '../assets/aoVivoBasquete.png'
-import bgAoVivoTenis from '../assets/bgAoVivoTenis.png'
-import bgCombinada from '../assets/combinada.png'
+import bgAoVivoBasquete from '../assets/aoVivoBasquete.webp'
+import bgAoVivoTenis from '../assets/bgAoVivoTenis.webp'
+import bgCombinada from '../assets/combinada.webp'
 import escudoKnicksGde from '../assets/escudoKnicksGde.png'
 import escudoMagicGde from '../assets/escudoMagicGde.png'
 import escudoBarcelonaGde from '../assets/escudoBarcelonaGde.png'
@@ -23,28 +23,29 @@ import flagUSA from '../assets/iconPaises/estados-unidos.png'
 
 import imgMissaoVerdao from '../assets/imgMissaoVerdao.png'
 import imgPagamentoAntecipado from '../assets/img-promo-pagamento-antecipado-futebol.png'
-import imgFlamengo from '../assets/bgFlamengo.png'
+import imgFlamengo from '../assets/bgFlamengo.webp'
 import imgTesouroRei from '../assets/img-promo-tesouro-do-rei.png'
 import imgPromoPiggy from '../assets/img-promo-piggy.png'
-import imgPromoRabbit from '../assets/img-promo-rabbit.png'
-import imgMissao100k from '../assets/img-missao-100k.png'
-import imgTorneioWazdan from '../assets/img-torneio-wazdan.png'
-import imgJogoFortune from '../assets/img-jogo-fortune.png'
-import imgJogoMacaco from '../assets/img-jogo-macaco.png'
+import imgPromoRabbit from '../assets/img-promo-rabbit.webp'
+import imgMissao100k from '../assets/img-missao-100k.webp'
+import imgTorneioWazdan from '../assets/img-torneio-wazdan.webp'
+import imgJogoFortune from '../assets/img-jogo-fortune.webp'
+import imgJogoMacaco from '../assets/img-jogo-macaco.webp'
 import imgAviator from '../assets/imgAviator.png'
 import imgRoletaSorte from '../assets/imgRoletaSorte.png'
 import imgFutebolStudio from '../assets/imgFutebolStudio.png'
 import imgRabbit from '../assets/imgRabbit.png'
 import imgTigrinho from '../assets/imgTigrinho.png'
-import imgRatinho from '../assets/img-ratinho.png'
+import imgRatinho from '../assets/img-ratinho.webp'
 
-import iconCasinoPlaceholder from '../assets/iconSports/casino-placeholder.svg'
+import iconBlackjack from '../assets/iconSports/blackjack.png'
 import iconCasino from '../assets/iconSports/casino.png'
 import iconCrash from '../assets/iconSports/crash.png'
 import iconDestaque from '../assets/iconSports/fire.png'
 import iconMore from '../assets/iconSports/more.png'
+import iconProvedores from '../assets/iconSports/provedores.png'
+import iconRoleta from '../assets/iconSports/roleta.png'
 import iconSlots from '../assets/iconSports/slots.png'
-import iconTable from '../assets/iconSports/table.png'
 
 import navApostas from '../assets/navApostas.svg'
 import navBusca from '../assets/navBusca.svg'
@@ -373,14 +374,14 @@ export const casinoRailSections: ProductRailSection<CasinoRailItem>[] = [
       {
         id: 'casino:roletas',
         categoryId: 'roletas',
-        icon: iconCasinoPlaceholder,
+        icon: iconRoleta,
         label: 'Roleta',
         clickable: true,
       },
       {
         id: 'casino:blackjack',
         categoryId: 'blackjack',
-        icon: iconTable,
+        icon: iconBlackjack,
         label: 'BlackJack',
         clickable: true,
       },
@@ -393,7 +394,7 @@ export const casinoRailSections: ProductRailSection<CasinoRailItem>[] = [
       {
         id: 'casino:provedores',
         categoryId: 'provedores',
-        icon: iconCasinoPlaceholder,
+        icon: iconProvedores,
         label: 'Provedores',
         clickable: true,
       },
