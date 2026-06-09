@@ -86,7 +86,7 @@
 }
 
 .multipla-turbinada-bs__tier--active {
-  border: 1px solid #FFBE8A;
+  border: 1px solid var(--primitives-orange-orange-300);
   border-radius: var(--Spacing-8, 8px);
   background:
     linear-gradient(

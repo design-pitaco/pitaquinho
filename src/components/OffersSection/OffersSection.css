@@ -147,7 +147,7 @@
   inset: 0;
   border-radius: 12px;
   padding: 1px;
-  background: linear-gradient(to top right, var(--tokens-background-background) 0%, var(--tokens-background-background) 64%, #DC2626 100%);
+  background: linear-gradient(to top right, var(--tokens-background-background) 0%, var(--tokens-background-background) 64%, var(--primitives-red-red-500) 100%);
   -webkit-mask: 
     linear-gradient(#fff 0 0) content-box, 
     linear-gradient(#fff 0 0);
@@ -158,22 +158,22 @@
 
 /* Super Aumentada - gradiente azul */
 .offer-card--super-aumentada::before {
-  background: linear-gradient(to top right, var(--tokens-background-background) 0%, var(--tokens-background-background) 64%, #60A5FA 100%);
+  background: linear-gradient(to top right, var(--tokens-background-background) 0%, var(--tokens-background-background) 64%, var(--primitives-blue-blue-300) 100%);
 }
 
 /* Aumentada - gradiente amarelo */
 .offer-card--aumentada::before {
-  background: linear-gradient(to top right, var(--tokens-background-background) 0%, var(--tokens-background-background) 64%, #EAB308 100%);
+  background: linear-gradient(to top right, var(--tokens-background-background) 0%, var(--tokens-background-background) 64%, var(--primitives-yellow-yellow-400) 100%);
 }
 
 /* Pechincha - gradiente verde */
 .offer-card--pechincha::before {
-  background: linear-gradient(to top right, var(--tokens-background-background) 0%, var(--tokens-background-background) 64%, #9730FF 100%);
+  background: linear-gradient(to top right, var(--tokens-background-background) 0%, var(--tokens-background-background) 64%, var(--primitives-brand-purple-brand-purple-400) 100%);
 }
 
 /* Super Combinada - gradiente roxo */
 .offer-card--super-combinada::before {
-  background: linear-gradient(to top right, var(--tokens-background-background) 0%, var(--tokens-background-background) 64%, #9730FF 100%);
+  background: linear-gradient(to top right, var(--tokens-background-background) 0%, var(--tokens-background-background) 64%, var(--primitives-brand-purple-brand-purple-400) 100%);
 }
 
 .offer-card__header {

@@ -1261,7 +1261,7 @@
 .live-event-page__logo-placeholder {
   width: 56px;
   height: 56px;
-  background-color: #e3e3e3;
+  background-color: var(--primitives-lightdark-lightdark-50);
   border-radius: 50%;
 }
 
@@ -1380,11 +1380,11 @@
 }
 
 .live-event-page__event-icon--red {
-  background-color: #ef4444;
+  background-color: var(--primitives-red-red-400);
 }
 
 .live-event-page__event-icon--goal {
-  background-color: #22c55e;
+  background-color: var(--primitives-green-green-400);
 }
 
 .live-event-page__event-text {
@@ -1849,7 +1849,7 @@
   justify-content: center;
   width: 20px;
   height: 20px;
-  background-color: #9ECC30;
+  background-color: var(--primitives-lime-lime-500);
   color: var(--tokens-text-text-on-color-black);
   border-radius: 100px;
   font-family: 'Red Hat Text', sans-serif;

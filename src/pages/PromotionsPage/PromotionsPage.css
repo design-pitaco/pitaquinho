@@ -416,7 +416,7 @@
   min-height: 20px;
   padding: 4px 8px;
   border-radius: 4px;
-  background: linear-gradient(90deg, #ffbe8a 0%, #f4bffd 100%);
+  background: linear-gradient(90deg, var(--primitives-orange-orange-300) 0%, var(--primitives-pink-pink-300) 100%);
   color: var(--tokens-text-text-on-color-black);
   font-family: 'Red Hat Text', sans-serif;
   font-size: 8px;
