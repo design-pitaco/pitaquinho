@@ -6,7 +6,7 @@ import imgPromoPagamentoAntecipadoFutebol from '../../assets/img-promo-pagamento
 import imgPromoPechincha from '../../assets/img-promo-pechincha.png'
 import imgPromoPitacoClub from '../../assets/img-promo-pitaco-club.png'
 import imgPromoPiggy from '../../assets/img-promo-piggy.png'
-import imgPromoRabbit from '../../assets/img-promo-rabbit.png'
+import imgPromoRabbit from '../../assets/img-promo-rabbit.webp'
 import imgPromoSuperAumentada from '../../assets/img-promo-super-aumentada.png'
 import imgPromoSubstituicaoProtegida from '../../assets/img-promo-substituicao-protegida.png'
 import imgPromoTesouroDoRei from '../../assets/img-promo-tesouro-do-rei.png'
