@@ -1,32 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 
-export type FeatureFlagId = 'freeBetsAvailable'
-
-export interface FeatureFlagDefinition {
-  id: FeatureFlagId
-  title: string
-  description: string
-  defaultEnabled: boolean
-}
-
-export const featureFlagDefinitions: FeatureFlagDefinition[] = [
-  {
-    id: 'freeBetsAvailable',
-    title: 'Apostas Gratis disponivel',
-    description: 'Ativa a experiencia em prototipo de Apostas Gratis.',
-    defaultEnabled: true,
-  },
-]
-
-type FeatureFlagsState = Record<FeatureFlagId, boolean>
-
-interface FeatureFlagsContextValue {
-  flags: FeatureFlagsState
-  definitions: FeatureFlagDefinition[]
-  setFeatureFlag: (flagId: FeatureFlagId, enabled: boolean) => void
-  toggleFeatureFlag: (flagId: FeatureFlagId) => void
-  isFeatureEnabled: (flagId: FeatureFlagId) => boolean
-}
+import {
+  FeatureFlagsContext,
+  featureFlagDefinitions,
+  type FeatureFlagId,
+  type FeatureFlagsContextValue,
+  type FeatureFlagsState,
+} from './featureFlagsContext'
 
 interface FeatureFlagsProviderProps {
   children: ReactNode
@@ -62,8 +42,6 @@ const readStoredFeatureFlags = () => {
     return defaultFlags
   }
 }
-
-const FeatureFlagsContext = createContext<FeatureFlagsContextValue | null>(null)
 
 export function FeatureFlagsProvider({ children }: FeatureFlagsProviderProps) {
   const [flags, setFlags] = useState<FeatureFlagsState>(readStoredFeatureFlags)
@@ -101,14 +79,4 @@ export function FeatureFlagsProvider({ children }: FeatureFlagsProviderProps) {
       {children}
     </FeatureFlagsContext.Provider>
   )
-}
-
-export function useFeatureFlags() {
-  const context = useContext(FeatureFlagsContext)
-
-  if (!context) {
-    throw new Error('useFeatureFlags must be used within FeatureFlagsProvider')
-  }
-
-  return context
 }

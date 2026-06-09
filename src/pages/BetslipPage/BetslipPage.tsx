@@ -1977,16 +1977,11 @@ export function BetslipPage({
   const hadSelectionsRef = useRef(selections.length > 0)
 
   useEffect(() => {
-    if (isCoveredByEvent) {
-      setHasCompletedEnterAnimation(true)
-      return undefined
-    }
-
     if (hasCompletedEnterAnimation) return undefined
 
     const timer = window.setTimeout(() => {
       setHasCompletedEnterAnimation(true)
-    }, betslipPageEnterDurationMs)
+    }, isCoveredByEvent ? 0 : betslipPageEnterDurationMs)
 
     return () => window.clearTimeout(timer)
   }, [hasCompletedEnterAnimation, isCoveredByEvent])

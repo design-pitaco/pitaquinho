@@ -113,25 +113,29 @@ export function BeneficiosApostaBottomSheet({
   const safeActiveIndex = Math.min(activeIndex, Math.max(visibleItems.length - 1, 0))
 
   useEffect(() => {
-    if (!isOpen) {
-      isDraggingRef.current = false
-      setIsDragging(false)
+    const frame = window.requestAnimationFrame(() => {
+      if (!isOpen) {
+        isDraggingRef.current = false
+        setIsDragging(false)
+        setDragDeltaX(0)
+        return
+      }
+
+      const initialIndex = Math.max(
+        0,
+        visibleItemKeys
+          .split('|')
+          .filter(Boolean)
+          .findIndex((key) => key === initialItemId || key.startsWith(`${initialItemId}:`))
+      )
+
+      setActiveIndex(initialIndex)
+      setProgressCycle((cycle) => cycle + 1)
+      dragDeltaXRef.current = 0
       setDragDeltaX(0)
-      return
-    }
+    })
 
-    const initialIndex = Math.max(
-      0,
-      visibleItemKeys
-        .split('|')
-        .filter(Boolean)
-        .findIndex((key) => key === initialItemId || key.startsWith(`${initialItemId}:`))
-    )
-
-    setActiveIndex(initialIndex)
-    setProgressCycle((cycle) => cycle + 1)
-    dragDeltaXRef.current = 0
-    setDragDeltaX(0)
+    return () => window.cancelAnimationFrame(frame)
   }, [initialItemId, isOpen, visibleItemKeys])
 
   useEffect(() => () => {

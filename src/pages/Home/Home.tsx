@@ -1,4 +1,4 @@
-import { Fragment, Suspense, lazy, useCallback, useEffect, useRef, useState, useLayoutEffect, useMemo, type ComponentType, type ReactNode } from 'react'
+import { Fragment, Suspense, lazy, useCallback, useRef, useState, useLayoutEffect, useMemo, type ComponentType, type ReactNode } from 'react'
 import { HeaderV2 } from '../../components/HeaderV2'
 import { TrilhoEBanner } from '../../components/TrilhoEBanner'
 import { PromotionSection } from '../../components/PromotionSection'
@@ -147,11 +147,9 @@ export function Home({
     onLiveEventCloseStart?.()
   }, [onLiveEventCloseStart])
 
-  useEffect(() => {
-    if (!isLiveEventSuppressed || !selectedLiveMatch) return
-
+  if (isLiveEventSuppressed && selectedLiveMatch) {
     setSelectedLiveMatch(null)
-  }, [isLiveEventSuppressed, selectedLiveMatch])
+  }
 
   const handleCasinoGameOpen = (payload: CasinoGameOpenPayload) => {
     setSelectedCasinoGame(payload)

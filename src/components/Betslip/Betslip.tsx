@@ -206,10 +206,10 @@ export function Betslip({
     }
 
     if (shouldPresentFreeBetTag) {
-      setIsFreeBetTagRendered(true)
-      setIsFreeBetTagPresented(false)
-      setIsFreeBetTagExiting(false)
       freeBetTagFrameRef.current = window.requestAnimationFrame(() => {
+        setIsFreeBetTagRendered(true)
+        setIsFreeBetTagPresented(false)
+        setIsFreeBetTagExiting(false)
         freeBetTagFrameRef.current = window.requestAnimationFrame(() => {
           freeBetTagFrameRef.current = null
           setIsFreeBetTagPresented(true)
@@ -218,14 +218,17 @@ export function Betslip({
       return
     }
 
-    setIsFreeBetTagPresented(false)
-    setIsFreeBetTagExiting(isFreeBetTagRendered)
+    freeBetTagFrameRef.current = window.requestAnimationFrame(() => {
+      freeBetTagFrameRef.current = null
+      setIsFreeBetTagPresented(false)
+      setIsFreeBetTagExiting(isFreeBetTagRendered)
 
-    freeBetTagExitTimeoutRef.current = window.setTimeout(() => {
-      setIsFreeBetTagRendered(false)
-      setIsFreeBetTagExiting(false)
-      freeBetTagExitTimeoutRef.current = null
-    }, 260)
+      freeBetTagExitTimeoutRef.current = window.setTimeout(() => {
+        setIsFreeBetTagRendered(false)
+        setIsFreeBetTagExiting(false)
+        freeBetTagExitTimeoutRef.current = null
+      }, 260)
+    })
   }, [isFreeBetTagRendered, shouldShow, showFreeBetTag])
 
   const handleSurfaceTransitionEnd = useCallback((event: TransitionEvent<HTMLDivElement>) => {

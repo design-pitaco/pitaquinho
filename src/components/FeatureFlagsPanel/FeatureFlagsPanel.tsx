@@ -1,5 +1,5 @@
 import { BottomSheet } from '../BottomSheet'
-import { useFeatureFlags } from '../../hooks/FeatureFlagsProvider'
+import { useFeatureFlags } from '../../hooks/useFeatureFlags'
 import './FeatureFlagsPanel.css'
 
 interface FeatureFlagsPanelProps {
