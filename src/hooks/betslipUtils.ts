@@ -19,6 +19,8 @@ export interface BetslipSelection {
   eventStatus: BetslipEventStatus
   selectionType: BetslipSelectionType
   sport?: string
+  leagueId?: string
+  leagueName?: string
   homeTeam?: string
   awayTeam?: string
   eventName?: string
@@ -53,6 +55,8 @@ export interface BetslipSelectionInput {
   eventStatus?: BetslipEventStatus
   selectionType?: BetslipSelectionType
   sport?: string
+  leagueId?: string
+  leagueName?: string
   homeTeam?: string
   awayTeam?: string
   eventName?: string
@@ -234,6 +238,8 @@ export const createBetslipSelection = ({
   eventStatus = 'prematch',
   selectionType,
   sport,
+  leagueId,
+  leagueName,
   homeTeam,
   awayTeam,
   eventName,
@@ -284,6 +290,8 @@ export const createBetslipSelection = ({
       awayTeam,
     }),
     sport,
+    leagueId,
+    leagueName,
     homeTeam,
     awayTeam,
     eventName: getBetslipEventName({

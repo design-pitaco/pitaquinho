@@ -29,6 +29,8 @@ const basketballMarketChips = [
 
 interface CompetitionCalendarProps {
   sport: string
+  competitionId?: string
+  competitionName?: string
   matches: CompetitionMatch[]
 }
 
@@ -50,7 +52,7 @@ const tickLive = (time: string) => {
   return time
 }
 
-export function CompetitionCalendar({ sport, matches }: CompetitionCalendarProps) {
+export function CompetitionCalendar({ sport, competitionId, competitionName, matches }: CompetitionCalendarProps) {
   const marketChips = sport === 'basquete' ? basketballMarketChips : footballMarketChips
 
   const [activeMarket, setActiveMarket] = useState(marketChips[0].id)
@@ -131,6 +133,8 @@ export function CompetitionCalendar({ sport, matches }: CompetitionCalendarProps
             marketLabel,
             eventStatus: m.isLive ? 'live' : 'prematch',
             sport,
+            leagueId: competitionId,
+            leagueName: competitionName,
             homeTeam: m.homeName,
             awayTeam: m.awayName,
             eventTimeLabel: m.isLive ? liveClock : m.dateTime,

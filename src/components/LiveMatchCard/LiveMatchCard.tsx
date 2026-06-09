@@ -33,6 +33,8 @@ import '../LiveSection/LiveSection.css'
 
 export interface LiveMatchCardMatch {
   id: string
+  leagueId?: string
+  leagueName?: string
   time: string
   homeTeam: { name: string; icon: string; score: number }
   awayTeam: { name: string; icon: string; score: number }
@@ -707,6 +709,8 @@ export function LiveMatchCard({ match, sport, activeMarket, currentTime, onClick
       marketId: activeMarket,
       marketLabel: liveMarketLabels[activeMarket],
       eventStatus: 'live' as const,
+      leagueId: match.leagueId,
+      leagueName: match.leagueName,
       homeTeam: match.homeTeam.name,
       awayTeam: match.awayTeam.name,
       eventTimeLabel: currentTime,
@@ -737,6 +741,8 @@ export function LiveMatchCard({ match, sport, activeMarket, currentTime, onClick
         marketLabel,
         eventStatus: 'live',
         sport,
+        leagueId: match.leagueId,
+        leagueName: match.leagueName,
         homeTeam: match.homeTeam.name,
         awayTeam: match.awayTeam.name,
         eventTimeLabel: currentTime,

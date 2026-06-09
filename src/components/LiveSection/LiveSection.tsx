@@ -765,7 +765,11 @@ export function LiveSection({ onMatchClick, onOpenCompetition }: LiveSectionProp
                     {league.matches.map((match, matchIndex) => (
                       <LiveMatchCard
                         key={match.id}
-                        match={match}
+                        match={{
+                          ...match,
+                          leagueId: league.id,
+                          leagueName: league.name,
+                        }}
                         sport={league.sport}
                         activeMarket={activeMarket}
                         currentTime={getMatchTime(match.id, match.time)}

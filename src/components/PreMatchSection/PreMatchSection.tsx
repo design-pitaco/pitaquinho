@@ -118,6 +118,8 @@ export interface MatchPlayerProp {
   marketId?: string
   marketLabel?: string
   eventStatus?: 'prematch' | 'live'
+  leagueId?: string
+  leagueName?: string
   homeTeam?: string
   awayTeam?: string
   eventTimeLabel?: string
@@ -1618,6 +1620,8 @@ export function PreMatchPlayerPropCard({ player }: { player: MatchPlayerProp }) 
                   eventStatus: player.eventStatus ?? 'prematch',
                   selectionType: 'player',
                   sport: player.sport,
+                  leagueId: player.leagueId,
+                  leagueName: player.leagueName,
                   homeTeam: player.homeTeam,
                   awayTeam: player.awayTeam,
                   eventTimeLabel: player.eventTimeLabel,
@@ -2389,6 +2393,8 @@ export function PreMatchSection({ onOpenCompetition, onMatchClick }: PreMatchSec
                           marketId: activeMarket,
                           marketLabel,
                           eventStatus: 'prematch' as const,
+                          leagueId: league.id,
+                          leagueName: league.name,
                           homeTeam: match.homeTeam.name,
                           awayTeam: match.awayTeam.name,
                           eventTimeLabel: match.dateTime,
@@ -2410,6 +2416,8 @@ export function PreMatchSection({ onOpenCompetition, onMatchClick }: PreMatchSec
                               marketLabel,
                               eventStatus: 'prematch',
                               sport: league.sport,
+                              leagueId: league.id,
+                              leagueName: league.name,
                               homeTeam: match.homeTeam.name,
                               awayTeam: match.awayTeam.name,
                               eventTimeLabel: match.dateTime,
